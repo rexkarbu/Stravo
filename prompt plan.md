@@ -1,211 +1,196 @@
 # Product Requirements Document & Technical Architecture Plan
 
-## Stravo Pro (Personal Edition) — High-Performance Outdoor Fitness & 3D GPS Tracker
+## Stravo Pro (Personal Edition) — 100% Offline, Zero-Server Outdoor Fitness & 3D GPS Tracker
 
 **Platform:** Android (Primary Target) / Cross-platform Ready (Flutter)  
 **Framework:** Flutter 3.38+ / Dart 3.10+  
 **Status:** Active Blueprint & Engineering Specification  
-**Product Type:** Advanced GPS Fitness Tracker, 3D Terrain Visualizer, & Auto-Footage Creator  
-**Target Penggunaan:** Aplikasi Pribadi Berkualitas Pro (Meniru & Menggratiskan Fitur-Fitur Premium Strava Subscription & Relive)  
+**Arsitektur Inti:** **100% Standalone On-Device / Zero-Server (Serverless Lokal / Pure Edge Computing)**  
+**Target Penggunaan:** Aplikasi Pribadi Berkualitas Pro (Meniru & Menggratiskan Fitur-Fitur Premium Strava Subscription & Relive Tanpa Server & Tanpa Biaya)  
 
 ---
 
-# 1. Product Vision & Philosophy
+# 1. Product Vision & Filosofi 100% Offline
 
-Membangun aplikasi pelacak olahraga outdoor (khususnya **Gravel Cycling**, **Road Cycling**, **Trail Running**, **Road Running**, dan **Hiking**) yang menghadirkan pengalaman kelas atas setara **Strava Subscription / Summit** dan **Relive Pro** secara **100% GRATIS dan MANDIRI (Self-Sustained)**.
+Membangun aplikasi pelacak olahraga outdoor (khususnya **Gravel Cycling**, **Road Cycling**, **Trail Running**, **Road Running**, dan **Hiking**) yang menghadirkan pengalaman kelas atas setara **Strava Subscription / Summit** dan **Relive Pro** secara **100% MANDIRI DI DALAM HP (Zero-Server / Standalone)**.
 
-### Nilai Utama:
-1. **Zero-Cost & Free-Tier Architecture**: Menghindari API komersial mahal (seperti Google Maps / Mapbox billing tinggi) dengan memanfaatkan **MapLibre GL**, **OpenStreetMap Vector Tiles**, **Open-Elevation / Terrarium RGB DEM**, dan pemrosesan offline lokal di perangkat.
-2. **First-Class Gravel & Trail Experience**: Memperlakukan sepeda Gravel dan Trail Run secara khusus dengan analisis tipe permukaan jalan (*Tarmac, Gravel, Dirt, Cobbles*), profil tanjakan gradien berwarna (*climb grading*), dan *Grade Adjusted Pace (GAP)*.
-3. **Cinematic 3D Terrain & Route Animation**: Visualisasi topografi 3D penuh layaknya Relive / FATMAP, dengan fitur flythrough kamera 3D interaktif yang menyusuri jalur GPS.
-4. **Auto-Footage & Dynamic Social Share**: Generator video rekap (MP4/GIF) otomatis on-device yang menggabungkan animasi rute 3D, foto di titik koordinat (*waypoint photo popups*), telemetri live, serta kartu statistik estetik untuk Instagram Story & WhatsApp.
-5. **Local-First & Rock-Solid Reliability**: Data tracking disimpan secara lokal (SQLite/Drift). Pelacakan di latar belakang (*background foreground service*) tidak boleh mati meski layar terkunci atau aplikasi diminimalkan.
+### Prinsip Utama:
+1. **Zero-Server & Zero-Cloud Dependency**: Tidak ada server backend, tidak ada database cloud berbayar (No Firebase, No Supabase, No AWS). Seluruh logic, database, pemrosesan sensor, dan rendering video berjalan 100% di chipset dan memori smartphone.
+2. **True Offline GPS & Navigation**: GPS berjalan langsung via chipset satelit hardware HP (GNSS: GPS, GLONASS, Galileo, BeiDou) tanpa memerlukan koneksi internet, paket data, atau sinyal seluler. Tetap bekerja sempurna di tengah hutan belantara, lereng gunung, atau jalur gravel pelosok.
+3. **Offline 3D Vector Maps & Terrain**: Menggunakan format file peta lokal **MBTiles / PMTiles** dan raster Digital Elevation Model (DEM) offline. Peta dan elevasi 3D dimuat langsung dari storage internal ponsel.
+4. **On-Device Video & Footage Rendering**: Pembuatan animasi 3D flyover dan video rekap media sosial diproses langsung oleh GPU/CPU ponsel menggunakan Flutter Canvas & native hardware video encoder (`ffmpeg_kit_flutter` / Android MediaCodec).
+5. **On-Device Gravel & Sensor Analytics**: Analisis getaran permukaan jalan (*roughness/surface detection*) dihitung langsung dari data accelerometer ponsel dan atribut peta offline.
+6. **Kedaulatan Data Penuh (Data Sovereignty)**: Data pengguna 100% milik pengguna, tersimpan aman di SQLite lokal (`drift`), dengan fitur ekspor/impor universal (GPX, TCX, FIT, JSON Backup) langsung ke memori HP.
 
 ---
 
-# 2. Perbandingan Fitur: Strava Premium vs Stravo Pro (Gratis)
+# 2. Perbandingan Fitur: Strava Premium vs Stravo Pro (100% Offline Lokal)
 
-| Fitur | Strava (Wajib Langganan / Bayar) | Stravo Pro (100% Gratis & Lokal) |
+| Fitur | Strava (Wajib Langganan & Butuh Server) | Stravo Pro (100% Offline, Zero-Server di HP) |
 | :--- | :--- | :--- |
-| **Peta 3D & Terrain Topografi** | Terkunci di Strava Subscription (hanya rute tertentu) | **MapLibre 3D + DEM Terrarium Terrain** (bebas putar 360°, pitch, tilt, relief shading) |
-| **Video Replay / Route Flyover** | Terbatas atau butuh aplikasi luar (Relive berbayar) | **Built-in 3D Route Flyover & Auto-Footage Generator** langsung di device |
-| **Personal Heatmap** | Berbayar bulanan/tahunan | **Personal Heatmap Global & Per-Sport** gratis, di-render dari database SQLite lokal |
-| **Live Segments & Ghost Pacer** | Terkunci di tier premium | **Custom Segment Engine + Virtual Ghost Competitor** lokal |
-| **Analisis Permukaan Gravel** | Terbatas / estimasi kasar | **Surface Profiler**: Tarmac vs Gravel vs Trail dengan estimasi rolling resistance |
-| **Grade Adjusted Pace (GAP)** | Berbayar | **Kalkulator GAP bawaan** untuk lari tanjakan/turunan |
-| **Weather & Wind Overlay** | Hanya rangkuman dasar | **Open-Meteo Integration**: Arah angin real-time (Headwind vs Tailwind) di atas rute |
-| **Export/Import Rute** | Terbatas | **Universal GPX, TCX, FIT** Import & Export tanpa batasan |
+| **Ketergantungan Server** | Wajib login server, data tersimpan di cloud Strava | **Zero-Server**: Berjalan mandiri di HP tanpa akun online |
+| **Peta 3D & Terrain Topografi** | Terkunci di tier berbayar & butuh internet cepat | **MapLibre 3D + Offline MBTiles / DEM Tiles** (berfungsi tanpa sinyal di pelosok gunung) |
+| **Video Replay / Route Flyover** | Berbayar (Relive/Strava) & di-render di cloud server | **On-Device 3D Flyover & Video Maker** langsung via GPU ponsel |
+| **Personal Heatmap** | Berbayar bulanan/tahunan di server Strava | **Personal Heatmap 2D/3D** di-render instan dari SQLite lokal HP |
+| **Live Segments & Ghost Pacer** | Terkunci di tier premium | **Custom Segment Matcher + Ghost Competitor** lokal di device |
+| **Analisis Permukaan Gravel** | Terbatas & estimasi server | **Vibration Analyzer (Accelerometer HP) + Offline Surface Profiling** |
+| **Grade Adjusted Pace (GAP)** | Berbayar | **Kalkulator GAP offline bawaan** untuk tanjakan & turunan |
+| **Penyimpanan & Privasi Data** | Di cloud perusahaan | **100% Privat di HP**, ekspor/impor file GPX/FIT/TCX bebas |
 
 ---
 
-# 3. Kategori Olahraga & Metrik Spesifik
+# 3. Arsitektur 100% Offline & Komputasi On-Device
 
-Aplikasi mendukung kategori olahraga yang disesuaikan secara presisi:
+Semua fungsionalitas yang biasanya membutuhkan server dipindahkan ke pemrosesan internal smartphone:
 
-### 3.1 Gravel Cycling (Fitur Unggulan)
-- **Metrik Utama**: Kecepatan, Jarak, Waktu Bergerak (*Moving Time*), Elevasi, VAM (*Vertical Ascent Meters/hour*).
-- **Surface Breakdown**: Estimasi persentase permukaan rute:
-  - Paved / Aspal (Smooth)
-  - Fine Gravel / Compact Dirt (Fast Gravel)
-  - Rough Gravel / Cobblestones / Rocky (Technical)
-- **Climb Gradient Index**: Pemetaan tanjakan dengan kode warna:
+### 3.1 Hardware Satelit GPS Murni (Tanpa Paket Data)
+- Ponsel Android modern memiliki antena penerima multi-GNSS independen.
+- Aplikasi membaca stream koordinat langsung dari hardware GPS internal dengan frekuensi 1 Hz (1 koordinat per detik).
+- Penghitungan kecepatan, jarak lengkung bumi (*Haversine / Vincenty geodesy*), dan arah kompas (*bearing*) dihitung dengan rumus matematika native di Dart tanpa memanggil API eksternal.
+
+### 3.2 Offline Map Engine (MBTiles / PMTiles & Offline Tile Cache)
+- Peta tidak memerlukan koneksi internet aktif saat beraktivitas:
+  - **Paket Peta Offline (MBTiles / PMTiles)**: File tunggal berbasis SQLite berisi tile vektor OpenStreetMap yang dapat ditaruh di memori HP (misalnya peta area Jawa Barat, Bali, atau provinsi tempat tinggal).
+  - **Tile Cache Otomatis**: Saat pengguna terhubung ke Wi-Fi di rumah, peta yang pernah dilihat otomatis tersimpan di cache disk internal HP dan siap dipakai offline di rute tanpa sinyal.
+  - **Offline 3D Terrain DEM**: Ketinggian kontur gunung dimuat dari tile raster DEM (Terrarium / Mapzen) yang tersimpan di storage lokal.
+
+### 3.3 Sensor Fusion Internal & Bluetooth Low Energy (BLE)
+- **Barometer Internal**: Untuk HP yang memiliki sensor barometer, elevasi dihitung langsung dari tekanan udara atmosfer lokal (sangat akurat, deviasi < 1 meter) tanpa butuh data elevasi internet.
+- **Accelerometer & Gyroscope**:
+  - Deteksi getaran permukaan jalan (*surface roughness*) untuk membedakan aspal mulus vs jalan makadam/gravel.
+  - Estimasi *cadence* (langkah per menit untuk lari) saat HP di saku atau armband.
+- **Koneksi BLE Sensor (Peer-to-Peer Tanpa Internet)**:
+  - Tersambung langsung dengan *Heart Rate Strap*, *Cycling Speed Sensor*, dan *Cadence Sensor* melalui protokol Bluetooth standar.
+
+### 3.4 On-Device Video Renderer (Auto-Footage)
+- Biasanya aplikasi seperti Relive mengunggah koordinat dan foto ke server mereka untuk di-render menjadi video di cloud.
+- **Stravo Pro**: Merender frame demi frame animasi 3D lintasan dan pop-up foto langsung di HP menggunakan `CustomPainter` dan menyatukannya menjadi video MP4 memakai hardware video encoder internal HP (`ffmpeg_kit_flutter` / MediaCodec).
+
+---
+
+# 4. Kategori Olahraga & Metrik Spesifik (Gravel & Multi-Sport)
+
+### 4.1 Gravel Cycling (Fitur Utama)
+- **Metrik**: Kecepatan, Jarak, Waktu Bergerak (*Moving Time*), Elevasi, VAM (*Vertical Ascent Meters/hour*).
+- **Offline Surface Detection**:
+  - Memanfaatkan sensor getaran accelerometer internal HP (analisis spektrum frekuensi getaran) dipadukan dengan data jalan lokal:
+    - Aspal Mulus (Low vibration)
+    - Gravel Halus / Tanah Padat (Moderate steady vibration)
+    - Gravel Kasar / Makadam / Bebatuan (High amplitude random vibration)
+- **Climb Gradient Index**: Pemetaan tanjakan berwarna:
   - Hijau: 0% – 4% (False Flat)
   - Kuning: 5% – 8% (Moderate Climb)
   - Oranye: 9% – 12% (Hard Climb)
   - Merah / Ungu: >13% (Extreme Wall)
-- **Wind Impact Analyzer**: Penentuan sudut terpaan angin terhadap lintasan sepeda (*Headwind, Crosswind, Tailwind*).
 
-### 3.2 Road Cycling
-- Kecepatan instan, kecepatan rata-rata, kecepatan maksimum.
-- Daya tahan (*Power estimation* dalam watt berdasarkan kecepatan, bobot badan + sepeda, dan kemiringan jalan).
-- Dukungan sensor Bluetooth Low Energy (BLE): Speed, Cadence, dan Heart Rate monitor.
+### 4.2 Road Cycling
+- Kecepatan instan, kecepatan rata-rata, kecepatan puncak.
+- Estimasi daya tahan (*Estimated Power output* dalam watt) dihitung secara fisika lokal: daya gesek ban (*rolling resistance*), hambatan aerodinamis (*drag coefficient*), dan kemiringan jalan.
 
-### 3.3 Mountain Biking (MTB)
-- Evaluasi curamnya turunan (*Descent Steepness %*).
-- Kalkulasi elevasi ekstrem dan rasio waktu tanjakan vs turunan.
+### 4.3 Mountain Biking (MTB)
+- Evaluasi kecuraman turunan (*Descent Steepness %*), total turunan teknikal, dan elevasi ekstrem.
 
-### 3.4 Road Running & Trail Running
-- **Pace**: Waktu/km (misal `4:45 /km`) dan moving average pace.
-- **Grade Adjusted Pace (GAP)**: Menghitung kecepatan ekuivalen jika lari di lintasan datar (mengkompensasi energi saat menanjak/menurun).
-- **Split Per Kilometer**: Notifikasi audio setiap kelipatan 1 km dengan laporan pace split.
-- **Cadence Lari**: Estimasi langkah per menit (SPM) via accelerometer internal HP.
+### 4.4 Road Running & Trail Running
+- **Pace**: Waktu/km (misal `4:45 /km`) dengan moving-window smoothing.
+- **Grade Adjusted Pace (GAP)**: Rumus fisiologis Minetti/Strava untuk menghitung ekuivalen pace datar saat menanjak atau menurun.
+- **Split Per Kilometer**: Notifikasi audio lokal via Android Text-to-Speech (TTS) tanpa butuh internet.
 
-### 3.5 Hiking & Walking
-- Kecepatan vertikal, waktu istirahat vs waktu jalan, profil ketinggian titik puncak (*Summit peak elevation*).
+### 4.5 Hiking & Walking
+- Kecepatan vertikal menanjak (*ascent rate* m/jam), rasio waktu istirahat vs bergerak, dan puncak ketinggian.
 
 ---
 
-# 4. Fitur GPS 3D, Animasi Rute & Peta Premium
+# 5. Fitur GPS 3D, Animasi Rute & Peta Offline
 
-## 4.1 3D Terrain Map Engine
-- Menggunakan **MapLibre GL** (open-source fork dari Mapbox GL) yang mendukung rendering 3D terrain berbasis raster DEM / Terrarium tiles.
-- Pengguna dapat mengubah perspektif peta:
-  - **2D Top-Down View**: Tampilan standar navigasi.
-  - **3D Isometric Tilt**: Peta dimiringkan (pitch 45°–60°) menampilkan kontur gunung, lembah, dan bukit di sekitar rute.
-  - **Relief Shading & Sun Shadowing**: Bayangan matahari berdasarkan waktu recording untuk estetika visual dramatis.
+## 5.1 3D Terrain Map Offline
+- Menggunakan engine **MapLibre GL Native** dengan source offline vector + raster DEM.
+- Pengguna dapat:
+  - Memiringkan peta (*pitch 45°–60°*) untuk melihat gunung dan lembah dalam 3D asli.
+  - Memutar peta 360° (*bearing rotation*) mengikuti arah hadap olahraga.
 
-## 4.2 Interactive 3D Route Flyover (Animasi Rute Menyerupai Relive)
+## 5.2 Interactive 3D Route Flyover (Replay Animasi Rute)
 - Mode peninjauan aktivitas pasca-olahraga:
   - Tombol **"3D Flyover Replay"**.
-  - Kamera bergerak otomatis menyusuri garis lintasan GPS dari garis Start hingga Finish.
-  - Kamera menerapkan sudut sinematik: memutar saat belokan tajam (*hairpin turns*), mendekat (*zoom-in*) pada titik tanjakan terberat, dan melebar (*wide angle*) pada puncak elevasi tertinggi.
-  - **Live Telemetry HUD**: Kotak indikator digital transparan menampilkan kecepatan, elevasi, detak jantung, dan jarak tempuh yang berjalan sinkron dengan posisi kamera.
-  - Kontrol pemutaran: Play, Pause, Scrubbing Slider (geser ke kilometer berapa pun), dan opsi kecepatan (1x, 2x, 4x, 8x).
+  - Kamera bergerak otomatis menelusuri rute GPS dari Start hingga Finish secara halus menggunakan interpolasi kurva Bézier.
+  - Kamera melakukan gerakan sinematik: memutar di tikungan tajam, mendekat di tanjakan terjal, dan menampilkan pemandangan luas di puncak elevasi.
+  - **Live Telemetry HUD**: Kotak overlay transparan menampilkan kecepatan, elevasi, dan jarak tempuh yang sinkron dengan posisi kamera.
+  - Kontrol interaktif: Play, Pause, Scrubbing Slider, dan kecepatan pemutaran (1x, 2x, 4x, 8x).
 
-## 4.3 Color-Coded Dynamic Polylines
-Jalur lintasan di peta dapat diubah visualisasinya berdasarkan layer data:
-1. **Speed Heat**: Gradien warna dingin ke hangat (Biru = Lambat &rarr; Hijau &rarr; Kuning &rarr; Merah = Sprint Maksimum).
-2. **Elevation Gradient**: Gradien ketinggian dari titik terendah hingga titik tertinggi.
-3. **Surface Type**: Garis hijau (Aspal), garis oranye (Gravel), garis cokelat (Tanah/Trail).
-4. **Heart Rate Zones**: Warna zona 1 hingga zona 5 (bila sensor denyut jantung tersambung).
+## 5.3 Color-Coded Polylines Dinamis
+Garis lintasan di peta dapat diwarnai berdasarkan:
+1. **Speed Heat**: Gradien dingin ke hangat (Biru = Santai &rarr; Hijau &rarr; Kuning &rarr; Merah = Sprint).
+2. **Elevation Gradient**: Gradien warna ketinggian dari titik terendah ke tertinggi.
+3. **Surface Type**: Hijau (Aspal), Oranye (Gravel), Cokelat (Tanah).
 
-## 4.4 Personal Heatmap (2D & 3D)
-- Menampilkan seluruh jejak riwayat aktivitas pengguna yang digabungkan ke dalam satu peta kanvas.
-- Garis rute yang sering dilewati akan bersinar lebih terang (*dense heat effect*).
-- Filter per kategori: Heatmap Gravel saja, Heatmap Lari saja, atau Semua Aktivitas.
-- Dihitung secara efisien langsung dari koordinat lokal di SQLite tanpa biaya server.
+## 5.4 Personal Heatmap (2D & 3D Offline)
+- Menggabungkan seluruh jalur aktivitas pengguna di dalam SQLite lokal menjadi layer heatmap bercahaya.
+- Tidak ada data yang dikirim ke server luar; proses kalkulasi dilakukan di memori HP.
+- Filter per kategori: Heatmap Gravel, Heatmap Lari, atau Semua.
 
-## 4.5 Live Segments & Ghost Competitor (Pacer Virtual)
-- Pengguna dapat menandai segmen lintasan favorit (contoh: tanjakan 2 km di daerah favorit).
-- Deteksi otomatis saat GPS pengguna memasuki titik awal segmen.
-- Mode **Ghost Competitor**:
-  - Menampilkan selisih waktu secara real-time terhadap waktu rekor pribadi (*Personal Record - PR*) pengguna di segmen tersebut.
-  - Audio cues: *"Kamu 3 detik di depan PR"* atau *"Kamu tertinggal 5 meter dari Ghost Pacer"*.
+## 5.5 Live Segments & Ghost Competitor (Offline Virtual Pacer)
+- Pengguna membuat segmen rute sendiri di peta lokal (contoh: "Tanjakan Bukit X 1.5 km").
+- Saat melintasi titik awal segmen secara offline:
+  - Aplikasi otomatis mendeteksi segmen aktif menggunakan spatial bounding box.
+  - Menampilkan selisih waktu real-time terhadap waktu terbaik (*Personal Record - PR*) pengguna di segmen tersebut.
+  - Audio TTS lokal: *"Kamu 2 detik di depan Ghost Pacer!"*.
 
 ---
 
-# 5. In-Ride Media & Auto-Footage Generator
+# 6. In-Ride Media & Auto-Footage Generator (100% On-Device)
 
-## 5.1 In-Activity Photo Waypoint Capture
-- Tombol cepat kamera langsung pada layar tracking tanpa mengganggu perekaman GPS.
-- Setiap foto yang diambil secara otomatis dibubuhi metadata:
-  - Koordinat lintang/bujur akurat (*Geotag*).
-  - Elevasi saat foto diambil.
-  - Jarak kilometer ke berapa dan durasi berjalan.
-- Foto muncul sebagai pin thumbnail interaktif di sepanjang garis peta 3D.
+## 6.1 Foto Waypoint Ter-Geotag Otomatis
+- Tombol cepat kamera di layar tracking.
+- Foto disimpan langsung di galeri/storage lokal HP dengan metadata koordinat GPS, ketinggian, dan kilometer tempuh.
+- Pin foto muncul otomatis di atas garis rute 3D.
 
-## 5.2 On-Device Auto-Footage Generator (Video Rekap Animasi)
-- **Tujuan**: Menghasilkan video MP4 pendek (15–60 detik) atau GIF animasi yang siap dibagikan ke media sosial secara instan tanpa membutuhkan server rendering berbayar.
-- **Mekanisme Rendering**:
-  - Menggunakan Flutter Canvas / Skia frame buffer atau rendering offscreen yang digabungkan melalui library native (`ffmpeg_kit_flutter`).
-  - Video menampilkan:
-    1. Logo & Judul Aktivitas + Tanggal.
-    2. Rute garis bergerak yang menyala (*dynamic animated polyline drawing*).
-    3. Pop-up foto waypoint saat animasi rute melewati titik foto diambil.
-    4. Animasi grafik elevasi di bagian bawah layar.
-    5. Rekap akhir: Total Jarak, Total Elevasi, Waktu Tempuh, Kecepatan Maksimum, dan Kalori/Work.
+## 6.2 Generator Video Rekap Animasi (MP4/GIF Lokal)
+- Pengguna menekan tombol **"Generate Footage"**.
+- HP langsung merender video rekap 15–45 detik secara lokal:
+  1. Intro judul aktivitas dan tanggal.
+  2. Animasi rute 3D berjalan dengan garis menyala (*animated tracer*).
+  3. Pop-up foto waypoint muncul saat animasi melewati lokasi foto diambil.
+  4. Grafik profil elevasi bergerak di bagian bawah layar.
+  5. Layar ringkasan akhir: Jarak, Elevasi, Durasi, Kecepatan Maksimum.
+- Hasil video MP4 tersimpan langsung di folder galeri HP untuk siap dibagikan ke media sosial.
 
-## 5.3 Dynamic Social Story Cards (Instagram Stories / WhatsApp / TikTok)
-- Generator kartu grafis beresolusi tinggi (rasio 9:16 untuk Stories dan 1:1 untuk Feed).
-- Pilihan template desain visual modern:
-  - **Dark Cyberpunk / Neon**: Garis rute neon oranye/cyan dengan latar belakang gelap kontras tinggi.
-  - **Minimalist Topo**: Garis kontur topografi dengan tipografi elegan modern.
-  - **Gravel Explorer**: Nuansa earthy tone dengan breakdown jenis permukaan jalan (Tarmac vs Dirt).
-  - **Classic Athletic**: Estetika minimalis ala Strava/Nike Run Club.
-- Kemudahan ekspor: Satu tombol langsung bagikan (*Share to Instagram Stories / WhatsApp*).
+## 6.3 Dynamic Social Story Cards (Rasio 9:16 & 1:1)
+- Generator kartu visual modern beresolusi tinggi langsung dari widget Flutter:
+  - **Dark Neon Theme**: Rute berpendar neon dengan latar belakang gelap kontras.
+  - **Gravel Topo Theme**: Garis kontur topografi dengan statistik jenis permukaan jalan.
+  - **Minimalist Athletic Theme**: Tipografi bersih modern ala Strava Pro.
+- Tombol langsung ekspor ke gambar PNG beresolusi tinggi untuk Instagram Stories, WhatsApp Status, atau TikTok.
 
 ---
 
-# 6. Core GPS Engine, Filtering & Background Reliability
+# 7. Keandalan Tracking Latar Belakang & Jaminan Zero Data Loss
 
-Aplikasi secanggih apa pun akan gagal jika pencatatan GPS hilang saat layar mati. Modul GPS adalah prioritas stabilitas nomor satu.
+## 7.1 Android Foreground Service & Wakelock
+- Layanan latar belakang dengan notifikasi persisten (`flutter_foreground_task`).
+- Menjaga CPU tetap aktif via `PARTIAL_WAKE_LOCK` agar pelacakan tidak mati saat layar dikunci atau HP masuk kantong.
+- Panduan panduan pengaturan baterai HP (agar OS seperti MIUI/OneUI tidak mematikan service).
 
-## 6.1 Foreground Service & Battery Optimization
-- Menggunakan Android Foreground Service dengan notifikasi persisten (`flutter_foreground_task`).
-- Mengatur `PARTIAL_WAKE_LOCK` dan `WIFI_LOCK` agar CPU perangkat tidak tertidur saat layar dimatikan.
-- UI onboarding khusus untuk memandu pengguna menonaktifkan *Battery Optimization / Smart Battery Saver* (terutama untuk merk Xiaomi MIUI/HyperOS, Samsung OneUI, Oppo/Vivo).
+## 7.2 Filter Kualitas GPS & Sensor Fusion
+- **Accuracy Gate**: Mengabaikan titik dengan horizontal accuracy > 18 meter.
+- **Speed Plausibility**: Menyaring lonjakan data akibat pantulan sinyal (*multipath error* di gedung/pepohonan).
+- **Kalman Filtering**: Menghaluskan garis rute agar tidak bergerigi atau zig-zag.
+- **Smart Auto-Pause**: Otomatis menjeda waktu saat berhenti dan melanjutkan kembali saat bergerak.
 
-## 6.2 Filter Kualitas GPS & Sensor Fusion
-Aplikasi tidak boleh menerima data GPS mentah yang berantakan (*noisy zig-zag*):
-1. **Accuracy Threshold**: Abaikan titik dengan horizontal accuracy > 18 meter.
-2. **Speed-Based Plausibility**: Abaikan lonjakan koordinat yang mengindikasikan kecepatan mustahil (misal > 90 km/jam untuk lari, > 140 km/jam untuk sepeda).
-3. **Dead Reckoning & Stationary Filter**: Jika kecepatan mendekati nol selama lebih dari 5 detik, jangan menambahkan jarak acak akibat GPS drift.
-4. **Kalman Filtering**: Menghaluskan titik koordinat (*smoothing curve*) sehingga visualisasi polyline di peta terlihat mulus layaknya rute profesional.
-
-## 6.3 Auto-Pause Cerdas
-- Mode auto-pause otomatis menghentikan timer saat pengguna berhenti di lampu merah atau istirahat.
-- Threshold sensitivitas yang dapat diatur:
-  - Cycling: Kecepatan < 2.5 km/jam selama 3 detik &rarr; Auto Pause.
-  - Running: Kecepatan < 1.0 km/jam selama 3 detik &rarr; Auto Pause.
-- Auto-resume instan saat terdeteksi pergerakan kembali.
-
-## 6.4 Pemulihan Crash & Power Loss (*Zero Data Loss Principle*)
-- Setiap titik GPS yang diterima langsung dicatat ke SQLite database dalam transaksi lokal secara inkremental (*incremental flush* setiap 5–10 detik).
-- Jika HP mati mendadak atau kehabisan baterai di tengah jalan:
-  - Saat aplikasi dibuka kembali, Stravo mendeteksi sesi yang belum selesai.
-  - Pengguna diberikan dialog: *"Sesi latihan sebelumnya ditemukan. Lanjutkan atau Simpan?"*.
-  - Tidak ada riwayat olahraga yang hilang.
+## 7.3 Pemulihan Crash & Baterai Habis (*Incremental Local Flush*)
+- Setiap 5–10 detik, koordinat GPS baru langsung ditulis (*commit*) ke SQLite internal.
+- Jika ponsel mati mendadak atau kehabisan baterai:
+  - Saat ponsel dinyalakan kembali dan Stravo dibuka, aplikasi langsung mendeteksi sesi yang belum selesai.
+  - Pengguna dapat memilih untuk melanjutkan pelacakan atau menyimpan sesi tersebut.
+  - Tidak ada data olahraga yang hilang (*0% Data Loss Guarantee*).
 
 ---
 
-# 7. Zero-Cost Infrastructure & Open-Source Stack
-
-Seluruh aplikasi dirancang agar tidak menimbulkan biaya langganan cloud bagi pengembang maupun pengguna:
-
-| Komponen | Pilihan Stack | Alasan & Keuntungan |
-| :--- | :--- | :--- |
-| **Framework** | Flutter 3.38+ (Dart 3.10+) | Satu codebase, performa grafis tinggi dengan engine Impeller/Skia |
-| **Peta & Visualisasi 3D** | `maplibre_gl` + Raster Terrain-RGB | Bebas lisensi, mendukung 3D terrain mesh, open-source |
-| **Sumber Peta Gratis** | OpenStreetMap Vector Tiles / DemTiles / MapTiler Free Tier | Menggantikan biaya ribuan dollar Google Maps API |
-| **Database Lokal** | `drift` (berbasis SQLite) | Query relasional super cepat, mendukung penyimpanan ribuan titik GPS dan index spasial R-Tree |
-| **State Management** | `flutter_riverpod` | Arsitektur state teruji, decoupling sempurna antara logic GPS dan tampilan UI |
-| **Background Location** | `flutter_foreground_task` + `geolocator` | Layanan latar belakang stabil di Android 10, 11, 12, 13, 14, 15+ |
-| **Video & Footage Maker** | Custom Flutter Canvas + `ffmpeg_kit_flutter` | Rendering MP4 lokal langsung di prosesor perangkat |
-| **Cuaca & Angin** | Open-Meteo API | 100% gratis untuk penggunaan non-komersial, tanpa butuh API key |
-| **Elevasi Akurat** | Open-Elevation API / Local DEM fallback | Koreksi barometrik & elevasi rute gratis |
-| **Sync Opsional** | Supabase (Free Tier / Self-hosted) atau Google Drive Backup | Cadangan cloud opsional tanpa membebani biaya developer |
-
----
-
-# 8. Arsitektur Modular & Struktur Direktori
-
-Struktur project memisahkan domain logic, core engine, services, dan UI secara modular:
+# 8. Arsitektur Modular & Struktur Direktori Project
 
 ```text
 lib/
 ├── app/
 │   ├── config/
-│   │   ├── app_theme.dart          # Tema modern: Dark Neon, Stravo Orange, Topo
+│   │   ├── app_theme.dart          # Tema: Dark Neon, Stravo Orange, Topo
 │   │   └── routes.dart
 │   └── stravo_app.dart
 │
@@ -215,40 +200,45 @@ lib/
 │   │   ├── app_database.dart
 │   │   ├── tables/
 │   │   └── daos/
-│   ├── error/
-│   ├── location/                   # Core GPS Streamer, Kalman Filter, Plausibility Check
+│   ├── offline_maps/               # Pengelola MBTiles, PMTiles & Tile Caching Lokal
+│   │   ├── mbtiles_service.dart
+│   │   └── tile_cache_manager.dart
+│   ├── location/                   # GPS Streamer, Kalman Filter, Auto-Pause
 │   │   ├── gps_engine.dart
 │   │   ├── kalman_filter.dart
 │   │   └── auto_pause_detector.dart
 │   ├── permissions/                # Android 10+ background permission flow
-│   ├── sensors/                    # BLE Cadence, Speed & Heart Rate Monitor
+│   ├── sensors/                    # Barometer internal & BLE Heart Rate / Cadence
+│   │   ├── barometer_sensor.dart
+│   │   ├── accelerometer_vibration.dart
+│   │   └── ble_sensor_manager.dart
 │   ├── utils/                      # Geo math, unit converters, formatting
-│   └── weather/                    # Open-Meteo client (Wind direction & speed)
+│   └── backup/                     # Offline JSON / SQLite full database backup
 │
 ├── features/
-│   ├── recording/                  # Sesi pencatatan live
+│   ├── recording/                  # Layar pencatatan live
 │   │   ├── data/
 │   │   ├── domain/models/
 │   │   └── presentation/
 │   │       ├── screens/recording_screen.dart
 │   │       └── widgets/live_telemetry_hud.dart
 │   │
-│   ├── map_3d/                     # Modul Peta 3D & Replay
+│   ├── map_3d/                     # Peta 3D & Replay Animasi
 │   │   ├── controllers/camera_3d_controller.dart
 │   │   ├── widgets/terrain_3d_map.dart
 │   │   └── widgets/flyover_player.dart
 │   │
-│   ├── footage_generator/          # Generator Video Rekap & Story Cards
-│   │   ├── services/video_render_service.dart
+│   ├── footage_generator/          # Generator Video Rekap (MP4) & Story Cards Lokal
+│   │   ├── services/on_device_video_renderer.dart
 │   │   ├── painters/route_canvas_painter.dart
 │   │   └── presentation/story_card_exporter_sheet.dart
 │   │
-│   ├── gravel_analytics/           # Modul Khusus Sepeda Gravel & Trail
-│   │   ├── surface_classifier.dart
+│   ├── gravel_analytics/           # Analisis Getaran Permukaan Jalan & Tanjakan
+│   │   ├── vibration_surface_classifier.dart
 │   │   ├── climb_gradient_calculator.dart
 │   │   └── wind_resistance_analyzer.dart
 │   │
-│   ├── heatmap/                    # Modul Personal Heatmap (2D & 3D)
+│   ├── heatmap/                    # Personal Heatmap 2D & 3D Lokal
 │   │   ├── heatmap_tile_generator.dart
 │   │   └── presentation/personal_heatmap_screen.dart
 │   │
@@ -257,18 +247,18 @@ lib/
 │   │   ├── ghost_pacer_engine.dart
 │   │   └── presentation/segment_hud_widget.dart
 │   │
-│   ├── activity_history/           # Riwayat, list filter, detail activity
+│   ├── activity_history/           # Riwayat aktivitas & detail
 │   │   ├── presentation/activity_list_screen.dart
 │   │   └── presentation/activity_detail_screen.dart
 │   │
-│   ├── dashboard/                  # Ringkasan mingguan/bulanan, PR, fitness status
-│   └── profile/                    # Profil user, gear/bike management (Gravel/Road)
+│   ├── dashboard/                  # Statistik mingguan/bulanan & PR offline
+│   └── profile/                    # Profil & manajemen sepeda (Gravel, Road, MTB)
 │
 ├── services/
-│   ├── background/                 # Android Foreground Service task handler
+│   ├── background/                 # Android Foreground Service handler
 │   │   └── background_task_handler.dart
-│   ├── audio_cues/                 # Text-to-speech feedback (split km, ghost pacer)
-│   └── export_import/              # GPX / FIT / TCX parsers
+│   ├── audio_cues/                 # Android Text-To-Speech (TTS) lokal
+│   └── export_import/              # Universal GPX / FIT / TCX parsers
 │
 └── main.dart
 ```
@@ -277,44 +267,44 @@ lib/
 
 # 9. Rencana Fase Pengembangan (Roadmap Eksekusi)
 
-### Phase 1: Rock-Solid Tracking Engine & Foreground Service (Fondasi Utama)
+### Phase 1: Rock-Solid Offline Tracking Engine (Fondasi Utama)
 - Integrasi `geolocator` dan `flutter_foreground_task`.
-- Implementasi filter akurasi GPS, Kalman smoothing, dan deteksi auto-pause.
-- Notifikasi status persisten Android dengan timer live dan kontrol Pause/Resume.
-- SQLite incremental flush: jaminan tidak ada data hilang saat crash.
+- Filter akurasi GPS satelit, Kalman smoothing, dan deteksi auto-pause.
+- Notifikasi persisten Android dengan timer live dan kontrol Pause/Resume.
+- Drift SQLite incremental flush: jaminan 0% data hilang saat crash.
 
-### Phase 2: Domain Metrik Multi-Sport (Spesialisasi Gravel & Trail)
+### Phase 2: Domain Multi-Sport & Sensor Accelerometer/Gravel
 - Model data multi-sport: Gravel Cycling, Road Cycling, MTB, Road Run, Trail Run, Hike.
-- Algoritma Surface Profiler (klasifikasi aspal, gravel, makadam/trail).
-- Perhitungan Grade Adjusted Pace (GAP) untuk lari dan Gradient Index untuk tanjakan sepeda.
-- Integrasi Open-Meteo untuk arah angin (Headwind / Tailwind).
+- Analisis getaran accelerometer ponsel untuk mendeteksi permukaan jalan (aspal vs gravel).
+- Perhitungan Grade Adjusted Pace (GAP) dan Gradient Index tanjakan sepeda.
+- Integrasi sensor Barometer internal dan BLE (Heart Rate & Cadence).
 
-### Phase 3: Peta 3D & Terrain Topografi
-- Setup **MapLibre GL** dengan raster Digital Elevation Model (DEM) / Terrarium tiles.
-- Pengaturan tilt 3D, rotasi 360°, dan hillshading kontur gunung.
-- Dynamic polyline rendering: pewarnaan rute berdasarkan kecepatan (*Speed Heat*), elevasi (*Elevation Shading*), atau tipe permukaan.
+### Phase 3: Peta 3D & Terrain Offline (MBTiles / Vector Tile Cache)
+- Setup **MapLibre GL** dengan dukungan offline MBTiles / PMTiles dan raster DEM lokal.
+- Pengaturan tilt 3D, rotasi 360°, dan hillshading topografi.
+- Dynamic polyline rendering: pewarnaan rute berdasarkan kecepatan (*Speed Heat*), elevasi, atau permukaan jalan.
 
 ### Phase 4: Cinematic 3D Route Flyover (Replay Animasi Rute)
-- Pemutar animasi rute dengan pergerakan kamera dinamis yang mengikuti rute GPS.
+- Pemutar animasi rute dengan pergerakan kamera dinamis yang mengikuti rute GPS secara offline.
 - Floating HUD telemetri (kecepatan, gradien tanjakan, elevasi berjalan).
 - Kontrol pemutaran video interaktif (Play, Pause, Scrubbing, Speed Multiplier).
 
-### Phase 5: In-Ride Photos & Auto-Footage Video Generator
-- Quick photo capture saat gowes/lari dengan auto-geotagging & elevasi.
-- Video generator on-device (`ffmpeg_kit_flutter` + Skia Canvas) yang menyatukan animasi rute 3D, pop-up foto, dan ringkasan metrik menjadi file MP4/GIF siap share.
-- Pembuat kartu visual media sosial (9:16 Story Cards & 1:1 Feed Cards) dengan berbagai tema desain.
+### Phase 5: In-Ride Photos & On-Device Auto-Footage Generator
+- Quick photo capture saat berolahraga dengan auto-geotagging & elevasi.
+- Video generator on-device (`ffmpeg_kit_flutter` / Skia Canvas) untuk menghasilkan video rekap MP4 animasi rute + pop-up foto langsung di HP tanpa server.
+- Generator kartu visual media sosial (9:16 Story Cards & 1:1 Feed Cards) dengan berbagai tema desain modern.
 
 ### Phase 6: Fitur Map Premium Ekstra (Personal Heatmap & Live Segments)
-- Personal Heatmap 2D & 3D per kategori olahraga.
-- Custom Live Segments dengan fitur **Virtual Ghost Competitor** & audio cues.
-- Universal GPX/FIT Export & Import.
+- Personal Heatmap 2D & 3D di-render langsung dari database SQLite lokal.
+- Custom Live Segments dengan fitur **Virtual Ghost Competitor** & audio cues lokal via TTS.
+- Universal GPX/FIT/TCX Export & Import langsung ke penyimpanan ponsel.
 
 ---
 
 # 10. Indikator Keberhasilan (Definition of Success)
 
-1. **Stabilitas Latar Belakang**: 0% sesi terputus atau terhenti saat layar mati selama gowes/lari berdurasi 1 hingga 5 jam.
-2. **Kualitas Data**: Jarak dan elevasi selaras dengan unit GPS terdedikasi (Garmin / Wahoo) dengan deviasi < 3%.
-3. **Performa 3D**: Render rute 3D dan animasi flyover berjalan lancar pada 60 FPS di perangkat Android kelas menengah.
-4. **Kecepatan Generator Footage**: Ekspor video rekap MP4 selesai dalam waktu kurang dari 30 detik secara lokal di perangkat.
-5. **Zero Bill**: Seluruh fungsionalitas berjalan lancar tanpa memerlukan satu pun langganan API berbayar.
+1. **100% Serverless & Offline**: Seluruh fitur (perekaman GPS, peta 3D, personal heatmap, segmen, pembuatan video rekap) dapat berjalan sempurna dalam mode pesawat (*Airplane Mode*) tanpa koneksi internet sama sekali.
+2. **Stabilitas Latar Belakang**: 0% sesi terputus saat layar mati selama beraktivitas 1 hingga 5 jam.
+3. **Akurasi Data**: Jarak dan elevasi selaras dengan unit GPS terdedikasi (Garmin / Wahoo) dengan deviasi < 3%.
+4. **Performa Rendering Lokal**: Video rekap MP4 30 detik selesai di-render di HP dalam waktu kurang dari 45 detik.
+5. **Privasi & Nol Biaya**: Tidak ada akun online, tidak ada data pribadi yang keluar dari ponsel pengguna, dan Rp 0 biaya operasional selamanya.
