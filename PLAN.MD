@@ -1,6 +1,10 @@
-# Rencana Proyek: Aplikasi Fitness Tracking Mirip Strava (Flutter/Android)
+# Rencana Proyek: Stravo Pro (100% Offline GPS & Outdoor Fitness)
 
-> Nama aplikasi belum ditentukan — dokumen ini pakai istilah "App" sebagai placeholder. Fokus platform: Android, dibangun dengan Flutter.
+> **PENTING: DOKUMEN MASTER TELAH DIPERBARUI KE ARSITEKTUR 100% OFFLINE / ZERO-SERVER**  
+> 1. **Spesifikasi Produk & PRD Lengkap**: Lihat [prompt plan.md](file:///d:/coding/flutter/stravo/prompt%20plan.md)
+> 2. **Master Kontrak Tim & Skema Database (Drift/SQLite)**: Lihat [TEAM_CONTRACT_AND_DATABASE_SCHEMA.md](file:///d:/coding/flutter/stravo/TEAM_CONTRACT_AND_DATABASE_SCHEMA.md)
+>
+> Dokumen di bawah ini merupakan arsip konsep awal sebelum migrasi ke sistem standalone on-device murni.
 
 ## 1. Ringkasan Konsep
 
