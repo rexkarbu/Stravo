@@ -1,1032 +1,320 @@
-# Product Requirements Document
+# Product Requirements Document & Technical Architecture Plan
 
-## Fitness Activity Tracking App — MVP v0.1
+## Stravo Pro (Personal Edition) — High-Performance Outdoor Fitness & 3D GPS Tracker
 
-**Platform:** Android
-**Framework:** Flutter
-**Status:** Planning
-**Product type:** GPS fitness/activity tracker
-**Target awal:** Solo developer / MVP validation
-
----
-
-# 1. Product Vision
-
-Membangun aplikasi Android yang memungkinkan pengguna merekam aktivitas olahraga outdoor seperti:
-
-- Running
-- Walking
-- Cycling
-- Hiking
-
-Aplikasi merekam perjalanan menggunakan GPS secara real-time dan menampilkan informasi penting seperti:
-
-- rute,
-- jarak,
-- durasi,
-- pace atau speed,
-- serta ringkasan aktivitas setelah selesai.
-
-Prioritas produk bukan membuat pengganti Strava secara penuh.
-
-Prioritas MVP adalah memastikan bahwa:
-
-> Pengguna dapat menekan Start, berolahraga, mematikan layar atau meminimalkan aplikasi, kemudian kembali dan mendapatkan rekaman aktivitas yang utuh dan cukup akurat.
-
-Jika kemampuan tersebut belum dapat diandalkan, fitur lain dianggap sekunder.
+**Platform:** Android (Primary Target) / Cross-platform Ready (Flutter)  
+**Framework:** Flutter 3.38+ / Dart 3.10+  
+**Status:** Active Blueprint & Engineering Specification  
+**Product Type:** Advanced GPS Fitness Tracker, 3D Terrain Visualizer, & Auto-Footage Creator  
+**Target Penggunaan:** Aplikasi Pribadi Berkualitas Pro (Meniru & Menggratiskan Fitur-Fitur Premium Strava Subscription & Relive)  
 
 ---
 
-# 2. Problem Statement
+# 1. Product Vision & Philosophy
 
-Banyak aplikasi fitness menyediakan terlalu banyak fitur sebelum fungsi dasar tracking menjadi fokus utama.
+Membangun aplikasi pelacak olahraga outdoor (khususnya **Gravel Cycling**, **Road Cycling**, **Trail Running**, **Road Running**, dan **Hiking**) yang menghadirkan pengalaman kelas atas setara **Strava Subscription / Summit** dan **Relive Pro** secara **100% GRATIS dan MANDIRI (Self-Sustained)**.
 
-Produk ini ingin menyediakan pengalaman tracking yang:
-
-1. sederhana,
-2. dapat dipercaya,
-3. tetap bekerja ketika layar mati,
-4. tidak kehilangan aktivitas ketika koneksi internet terputus,
-5. memberikan ringkasan aktivitas yang mudah dipahami.
-
----
-
-# 3. Target User
-
-## Primary User
-
-Pengguna Android yang melakukan aktivitas outdoor seperti:
-
-- lari,
-- jalan kaki,
-- bersepeda,
-- hiking,
-
-dan ingin menyimpan riwayat aktivitas menggunakan GPS.
-
-## Secondary User
-
-Pengguna yang ingin melihat perkembangan olahraga mingguan atau bulanan tanpa membutuhkan ekosistem sosial yang kompleks.
+### Nilai Utama:
+1. **Zero-Cost & Free-Tier Architecture**: Menghindari API komersial mahal (seperti Google Maps / Mapbox billing tinggi) dengan memanfaatkan **MapLibre GL**, **OpenStreetMap Vector Tiles**, **Open-Elevation / Terrarium RGB DEM**, dan pemrosesan offline lokal di perangkat.
+2. **First-Class Gravel & Trail Experience**: Memperlakukan sepeda Gravel dan Trail Run secara khusus dengan analisis tipe permukaan jalan (*Tarmac, Gravel, Dirt, Cobbles*), profil tanjakan gradien berwarna (*climb grading*), dan *Grade Adjusted Pace (GAP)*.
+3. **Cinematic 3D Terrain & Route Animation**: Visualisasi topografi 3D penuh layaknya Relive / FATMAP, dengan fitur flythrough kamera 3D interaktif yang menyusuri jalur GPS.
+4. **Auto-Footage & Dynamic Social Share**: Generator video rekap (MP4/GIF) otomatis on-device yang menggabungkan animasi rute 3D, foto di titik koordinat (*waypoint photo popups*), telemetri live, serta kartu statistik estetik untuk Instagram Story & WhatsApp.
+5. **Local-First & Rock-Solid Reliability**: Data tracking disimpan secara lokal (SQLite/Drift). Pelacakan di latar belakang (*background foreground service*) tidak boleh mati meski layar terkunci atau aplikasi diminimalkan.
 
 ---
 
-# 4. Product Goals
+# 2. Perbandingan Fitur: Strava Premium vs Stravo Pro (Gratis)
 
-MVP dianggap berhasil apabila pengguna dapat:
-
-1. membuat akun,
-2. memulai aktivitas,
-3. merekam perjalanan menggunakan GPS,
-4. pause dan resume,
-5. menjalankan recording ketika aplikasi diminimalkan atau layar mati,
-6. menyelesaikan aktivitas,
-7. melihat summary,
-8. menyimpan aktivitas,
-9. membuka kembali aktivitas tersebut,
-10. melihat statistik dasar mingguan dan bulanan.
+| Fitur | Strava (Wajib Langganan / Bayar) | Stravo Pro (100% Gratis & Lokal) |
+| :--- | :--- | :--- |
+| **Peta 3D & Terrain Topografi** | Terkunci di Strava Subscription (hanya rute tertentu) | **MapLibre 3D + DEM Terrarium Terrain** (bebas putar 360°, pitch, tilt, relief shading) |
+| **Video Replay / Route Flyover** | Terbatas atau butuh aplikasi luar (Relive berbayar) | **Built-in 3D Route Flyover & Auto-Footage Generator** langsung di device |
+| **Personal Heatmap** | Berbayar bulanan/tahunan | **Personal Heatmap Global & Per-Sport** gratis, di-render dari database SQLite lokal |
+| **Live Segments & Ghost Pacer** | Terkunci di tier premium | **Custom Segment Engine + Virtual Ghost Competitor** lokal |
+| **Analisis Permukaan Gravel** | Terbatas / estimasi kasar | **Surface Profiler**: Tarmac vs Gravel vs Trail dengan estimasi rolling resistance |
+| **Grade Adjusted Pace (GAP)** | Berbayar | **Kalkulator GAP bawaan** untuk lari tanjakan/turunan |
+| **Weather & Wind Overlay** | Hanya rangkuman dasar | **Open-Meteo Integration**: Arah angin real-time (Headwind vs Tailwind) di atas rute |
+| **Export/Import Rute** | Terbatas | **Universal GPX, TCX, FIT** Import & Export tanpa batasan |
 
 ---
 
-# 5. Non-Goals MVP
+# 3. Kategori Olahraga & Metrik Spesifik
 
-Fitur berikut secara eksplisit bukan bagian MVP:
+Aplikasi mendukung kategori olahraga yang disesuaikan secara presisi:
 
-- social feed,
-- follow/unfollow,
-- kudos,
-- comments,
-- public leaderboard,
-- segments,
-- challenges,
-- clubs,
-- messaging,
-- wearable integration,
-- heart-rate monitor integration,
-- power meter,
-- training plans,
-- AI coaching,
-- route recommendation,
-- live location sharing,
-- advanced fitness analytics.
+### 3.1 Gravel Cycling (Fitur Unggulan)
+- **Metrik Utama**: Kecepatan, Jarak, Waktu Bergerak (*Moving Time*), Elevasi, VAM (*Vertical Ascent Meters/hour*).
+- **Surface Breakdown**: Estimasi persentase permukaan rute:
+  - Paved / Aspal (Smooth)
+  - Fine Gravel / Compact Dirt (Fast Gravel)
+  - Rough Gravel / Cobblestones / Rocky (Technical)
+- **Climb Gradient Index**: Pemetaan tanjakan dengan kode warna:
+  - Hijau: 0% – 4% (False Flat)
+  - Kuning: 5% – 8% (Moderate Climb)
+  - Oranye: 9% – 12% (Hard Climb)
+  - Merah / Ungu: >13% (Extreme Wall)
+- **Wind Impact Analyzer**: Penentuan sudut terpaan angin terhadap lintasan sepeda (*Headwind, Crosswind, Tailwind*).
 
-Fitur tersebut tidak boleh dimasukkan hanya karena implementasinya terlihat mudah.
+### 3.2 Road Cycling
+- Kecepatan instan, kecepatan rata-rata, kecepatan maksimum.
+- Daya tahan (*Power estimation* dalam watt berdasarkan kecepatan, bobot badan + sepeda, dan kemiringan jalan).
+- Dukungan sensor Bluetooth Low Energy (BLE): Speed, Cadence, dan Heart Rate monitor.
 
----
+### 3.3 Mountain Biking (MTB)
+- Evaluasi curamnya turunan (*Descent Steepness %*).
+- Kalkulasi elevasi ekstrem dan rasio waktu tanjakan vs turunan.
 
-# 6. Core Product Principles
+### 3.4 Road Running & Trail Running
+- **Pace**: Waktu/km (misal `4:45 /km`) dan moving average pace.
+- **Grade Adjusted Pace (GAP)**: Menghitung kecepatan ekuivalen jika lari di lintasan datar (mengkompensasi energi saat menanjak/menurun).
+- **Split Per Kilometer**: Notifikasi audio setiap kelipatan 1 km dengan laporan pace split.
+- **Cadence Lari**: Estimasi langkah per menit (SPM) via accelerometer internal HP.
 
-## 6.1 Tracking reliability > jumlah fitur
-
-Aktivitas yang hilang atau memiliki jarak sangat salah merupakan kegagalan produk yang lebih serius daripada tidak adanya fitur sosial.
-
-## 6.2 Local-first recording
-
-Data aktivitas harus terlebih dahulu disimpan secara lokal.
-
-Koneksi backend tidak boleh menjadi dependency untuk proses tracking.
-
-## 6.3 Explicit recording lifecycle
-
-Tracking memiliki lifecycle yang jelas:
-
-`idle → preparing → recording → paused → recording → finishing → saved`
-
-Tidak boleh ada beberapa session recording aktif secara bersamaan.
-
-## 6.4 User-controlled tracking
-
-GPS recording hanya berjalan sebagai hasil tindakan eksplisit pengguna.
-
-Tidak ada passive location tracking pada MVP.
+### 3.5 Hiking & Walking
+- Kecepatan vertikal, waktu istirahat vs waktu jalan, profil ketinggian titik puncak (*Summit peak elevation*).
 
 ---
 
-# 7. MVP Feature Requirements
+# 4. Fitur GPS 3D, Animasi Rute & Peta Premium
 
-## 7.1 Authentication
+## 4.1 3D Terrain Map Engine
+- Menggunakan **MapLibre GL** (open-source fork dari Mapbox GL) yang mendukung rendering 3D terrain berbasis raster DEM / Terrarium tiles.
+- Pengguna dapat mengubah perspektif peta:
+  - **2D Top-Down View**: Tampilan standar navigasi.
+  - **3D Isometric Tilt**: Peta dimiringkan (pitch 45°–60°) menampilkan kontur gunung, lembah, dan bukit di sekitar rute.
+  - **Relief Shading & Sun Shadowing**: Bayangan matahari berdasarkan waktu recording untuk estetika visual dramatis.
 
-### User Stories
+## 4.2 Interactive 3D Route Flyover (Animasi Rute Menyerupai Relive)
+- Mode peninjauan aktivitas pasca-olahraga:
+  - Tombol **"3D Flyover Replay"**.
+  - Kamera bergerak otomatis menyusuri garis lintasan GPS dari garis Start hingga Finish.
+  - Kamera menerapkan sudut sinematik: memutar saat belokan tajam (*hairpin turns*), mendekat (*zoom-in*) pada titik tanjakan terberat, dan melebar (*wide angle*) pada puncak elevasi tertinggi.
+  - **Live Telemetry HUD**: Kotak indikator digital transparan menampilkan kecepatan, elevasi, detak jantung, dan jarak tempuh yang berjalan sinkron dengan posisi kamera.
+  - Kontrol pemutaran: Play, Pause, Scrubbing Slider (geser ke kilometer berapa pun), dan opsi kecepatan (1x, 2x, 4x, 8x).
 
-**AUTH-01**
+## 4.3 Color-Coded Dynamic Polylines
+Jalur lintasan di peta dapat diubah visualisasinya berdasarkan layer data:
+1. **Speed Heat**: Gradien warna dingin ke hangat (Biru = Lambat &rarr; Hijau &rarr; Kuning &rarr; Merah = Sprint Maksimum).
+2. **Elevation Gradient**: Gradien ketinggian dari titik terendah hingga titik tertinggi.
+3. **Surface Type**: Garis hijau (Aspal), garis oranye (Gravel), garis cokelat (Tanah/Trail).
+4. **Heart Rate Zones**: Warna zona 1 hingga zona 5 (bila sensor denyut jantung tersambung).
 
-Sebagai pengguna baru, saya ingin membuat akun menggunakan email agar aktivitas saya dapat dikaitkan dengan akun pribadi.
+## 4.4 Personal Heatmap (2D & 3D)
+- Menampilkan seluruh jejak riwayat aktivitas pengguna yang digabungkan ke dalam satu peta kanvas.
+- Garis rute yang sering dilewati akan bersinar lebih terang (*dense heat effect*).
+- Filter per kategori: Heatmap Gravel saja, Heatmap Lari saja, atau Semua Aktivitas.
+- Dihitung secara efisien langsung dari koordinat lokal di SQLite tanpa biaya server.
 
-**AUTH-02**
-
-Sebagai pengguna, saya ingin login kembali menggunakan akun yang telah dibuat.
-
-**AUTH-03**
-
-Sebagai pengguna, saya ingin login menggunakan Google agar onboarding lebih cepat.
-
-### Functional Requirements
-
-Aplikasi menyediakan:
-
-- register email/password,
-- login email/password,
-- Google Sign-In,
-- logout,
-- session persistence.
-
-### Definition of Done
-
-Authentication dianggap selesai jika:
-
-- pengguna dapat register,
-- pengguna dapat login,
-- pengguna dapat logout,
-- session tetap tersedia setelah aplikasi dibuka kembali,
-- kegagalan autentikasi menampilkan error yang dapat dimengerti,
-- user tidak dapat melihat data aktivitas milik akun lain.
+## 4.5 Live Segments & Ghost Competitor (Pacer Virtual)
+- Pengguna dapat menandai segmen lintasan favorit (contoh: tanjakan 2 km di daerah favorit).
+- Deteksi otomatis saat GPS pengguna memasuki titik awal segmen.
+- Mode **Ghost Competitor**:
+  - Menampilkan selisih waktu secara real-time terhadap waktu rekor pribadi (*Personal Record - PR*) pengguna di segmen tersebut.
+  - Audio cues: *"Kamu 3 detik di depan PR"* atau *"Kamu tertinggal 5 meter dari Ghost Pacer"*.
 
 ---
 
-# 8. Activity Type Selection
+# 5. In-Ride Media & Auto-Footage Generator
 
-Sebelum aktivitas dimulai, user memilih jenis olahraga.
+## 5.1 In-Activity Photo Waypoint Capture
+- Tombol cepat kamera langsung pada layar tracking tanpa mengganggu perekaman GPS.
+- Setiap foto yang diambil secara otomatis dibubuhi metadata:
+  - Koordinat lintang/bujur akurat (*Geotag*).
+  - Elevasi saat foto diambil.
+  - Jarak kilometer ke berapa dan durasi berjalan.
+- Foto muncul sebagai pin thumbnail interaktif di sepanjang garis peta 3D.
 
-MVP mendukung:
+## 5.2 On-Device Auto-Footage Generator (Video Rekap Animasi)
+- **Tujuan**: Menghasilkan video MP4 pendek (15–60 detik) atau GIF animasi yang siap dibagikan ke media sosial secara instan tanpa membutuhkan server rendering berbayar.
+- **Mekanisme Rendering**:
+  - Menggunakan Flutter Canvas / Skia frame buffer atau rendering offscreen yang digabungkan melalui library native (`ffmpeg_kit_flutter`).
+  - Video menampilkan:
+    1. Logo & Judul Aktivitas + Tanggal.
+    2. Rute garis bergerak yang menyala (*dynamic animated polyline drawing*).
+    3. Pop-up foto waypoint saat animasi rute melewati titik foto diambil.
+    4. Animasi grafik elevasi di bagian bawah layar.
+    5. Rekap akhir: Total Jarak, Total Elevasi, Waktu Tempuh, Kecepatan Maksimum, dan Kalori/Work.
 
-- Running
-- Walking
-- Cycling
-- Hiking
-
-Setiap activity memiliki field:
-
-- activity type,
-- start time,
-- end time,
-- elapsed duration,
-- moving duration,
-- distance,
-- route points,
-- average pace/speed,
-- elevation data jika tersedia,
-- title,
-- description,
-- privacy.
-
-Jenis aktivitas tidak boleh berubah setelah recording dimulai pada MVP.
-
----
-
-# 9. Pre-Recording Screen
-
-Sebelum tombol Start aktif, aplikasi melakukan readiness check.
-
-Aplikasi memeriksa:
-
-- location service aktif,
-- permission tersedia,
-- tidak ada activity lain yang sedang berjalan,
-- tracking engine siap.
-
-UI menampilkan:
-
-- activity type,
-- status GPS,
-- tombol Start.
-
-Jika lokasi tidak tersedia, Start tidak boleh diam-diam menjalankan session kosong.
+## 5.3 Dynamic Social Story Cards (Instagram Stories / WhatsApp / TikTok)
+- Generator kartu grafis beresolusi tinggi (rasio 9:16 untuk Stories dan 1:1 untuk Feed).
+- Pilihan template desain visual modern:
+  - **Dark Cyberpunk / Neon**: Garis rute neon oranye/cyan dengan latar belakang gelap kontras tinggi.
+  - **Minimalist Topo**: Garis kontur topografi dengan tipografi elegan modern.
+  - **Gravel Explorer**: Nuansa earthy tone dengan breakdown jenis permukaan jalan (Tarmac vs Dirt).
+  - **Classic Athletic**: Estetika minimalis ala Strava/Nike Run Club.
+- Kemudahan ekspor: Satu tombol langsung bagikan (*Share to Instagram Stories / WhatsApp*).
 
 ---
 
-# 10. Activity Recording
+# 6. Core GPS Engine, Filtering & Background Reliability
 
-Ini adalah fitur paling penting dalam keseluruhan MVP.
+Aplikasi secanggih apa pun akan gagal jika pencatatan GPS hilang saat layar mati. Modul GPS adalah prioritas stabilitas nomor satu.
 
-## User Story
+## 6.1 Foreground Service & Battery Optimization
+- Menggunakan Android Foreground Service dengan notifikasi persisten (`flutter_foreground_task`).
+- Mengatur `PARTIAL_WAKE_LOCK` dan `WIFI_LOCK` agar CPU perangkat tidak tertidur saat layar dimatikan.
+- UI onboarding khusus untuk memandu pengguna menonaktifkan *Battery Optimization / Smart Battery Saver* (terutama untuk merk Xiaomi MIUI/HyperOS, Samsung OneUI, Oppo/Vivo).
 
-Sebagai pengguna, saya ingin merekam olahraga menggunakan GPS sehingga saya dapat mengetahui rute, jarak, durasi, dan pace aktivitas saya.
+## 6.2 Filter Kualitas GPS & Sensor Fusion
+Aplikasi tidak boleh menerima data GPS mentah yang berantakan (*noisy zig-zag*):
+1. **Accuracy Threshold**: Abaikan titik dengan horizontal accuracy > 18 meter.
+2. **Speed-Based Plausibility**: Abaikan lonjakan koordinat yang mengindikasikan kecepatan mustahil (misal > 90 km/jam untuk lari, > 140 km/jam untuk sepeda).
+3. **Dead Reckoning & Stationary Filter**: Jika kecepatan mendekati nol selama lebih dari 5 detik, jangan menambahkan jarak acak akibat GPS drift.
+4. **Kalman Filtering**: Menghaluskan titik koordinat (*smoothing curve*) sehingga visualisasi polyline di peta terlihat mulus layaknya rute profesional.
 
-## Recording Screen
+## 6.3 Auto-Pause Cerdas
+- Mode auto-pause otomatis menghentikan timer saat pengguna berhenti di lampu merah atau istirahat.
+- Threshold sensitivitas yang dapat diatur:
+  - Cycling: Kecepatan < 2.5 km/jam selama 3 detik &rarr; Auto Pause.
+  - Running: Kecepatan < 1.0 km/jam selama 3 detik &rarr; Auto Pause.
+- Auto-resume instan saat terdeteksi pergerakan kembali.
 
-Saat recording aktif, tampilkan minimal:
-
-- map,
-- current route,
-- duration,
-- distance,
-- current pace/speed,
-- average pace/speed,
-- Pause,
-- Stop.
-
-UI lain dianggap sekunder.
-
----
-
-# 11. Tracking States
-
-## Idle
-
-Tidak ada aktivitas aktif.
-
-## Recording
-
-GPS points diterima dan aktivitas sedang dihitung.
-
-## Paused
-
-Timer aktivitas aktif dihentikan.
-
-GPS point baru tidak ditambahkan ke distance selama pause.
-
-## Resumed
-
-Recording melanjutkan session yang sama.
-
-Tidak membuat activity baru.
-
-## Finishing
-
-Tracking service dihentikan dan session sedang difinalisasi.
-
-## Saved
-
-Data aktivitas telah disimpan ke local database.
+## 6.4 Pemulihan Crash & Power Loss (*Zero Data Loss Principle*)
+- Setiap titik GPS yang diterima langsung dicatat ke SQLite database dalam transaksi lokal secara inkremental (*incremental flush* setiap 5–10 detik).
+- Jika HP mati mendadak atau kehabisan baterai di tengah jalan:
+  - Saat aplikasi dibuka kembali, Stravo mendeteksi sesi yang belum selesai.
+  - Pengguna diberikan dialog: *"Sesi latihan sebelumnya ditemukan. Lanjutkan atau Simpan?"*.
+  - Tidak ada riwayat olahraga yang hilang.
 
 ---
 
-# 12. Background Tracking
+# 7. Zero-Cost Infrastructure & Open-Source Stack
 
-Ketika recording sedang berjalan:
+Seluruh aplikasi dirancang agar tidak menimbulkan biaya langganan cloud bagi pengembang maupun pengguna:
 
-- user boleh meminimalkan aplikasi,
-- user boleh berpindah aplikasi,
-- layar boleh mati,
-- tracking harus tetap berlangsung.
-
-Foreground service Android harus memiliki persistent notification selama activity berlangsung.
-
-Notification minimal menunjukkan:
-
-- aktivitas sedang direkam,
-- elapsed time atau status tracking.
-
-Notification tidak boleh hilang selama tracking aktif.
-
----
-
-# 13. Location Point Model
-
-Setiap GPS point minimal menyimpan:
-
-- latitude,
-- longitude,
-- timestamp,
-- horizontal accuracy,
-- altitude jika tersedia,
-- speed jika tersedia.
-
-Opsional kemudian:
-
-- bearing,
-- raw provider information.
-
-Data mentah sebaiknya dipertahankan agar algoritma perhitungan dapat diperbaiki kemudian tanpa kehilangan source data.
+| Komponen | Pilihan Stack | Alasan & Keuntungan |
+| :--- | :--- | :--- |
+| **Framework** | Flutter 3.38+ (Dart 3.10+) | Satu codebase, performa grafis tinggi dengan engine Impeller/Skia |
+| **Peta & Visualisasi 3D** | `maplibre_gl` + Raster Terrain-RGB | Bebas lisensi, mendukung 3D terrain mesh, open-source |
+| **Sumber Peta Gratis** | OpenStreetMap Vector Tiles / DemTiles / MapTiler Free Tier | Menggantikan biaya ribuan dollar Google Maps API |
+| **Database Lokal** | `drift` (berbasis SQLite) | Query relasional super cepat, mendukung penyimpanan ribuan titik GPS dan index spasial R-Tree |
+| **State Management** | `flutter_riverpod` | Arsitektur state teruji, decoupling sempurna antara logic GPS dan tampilan UI |
+| **Background Location** | `flutter_foreground_task` + `geolocator` | Layanan latar belakang stabil di Android 10, 11, 12, 13, 14, 15+ |
+| **Video & Footage Maker** | Custom Flutter Canvas + `ffmpeg_kit_flutter` | Rendering MP4 lokal langsung di prosesor perangkat |
+| **Cuaca & Angin** | Open-Meteo API | 100% gratis untuk penggunaan non-komersial, tanpa butuh API key |
+| **Elevasi Akurat** | Open-Elevation API / Local DEM fallback | Koreksi barometrik & elevasi rute gratis |
+| **Sync Opsional** | Supabase (Free Tier / Self-hosted) atau Google Drive Backup | Cadangan cloud opsional tanpa membebani biaya developer |
 
 ---
 
-# 14. GPS Quality Filtering
+# 8. Arsitektur Modular & Struktur Direktori
 
-Aplikasi tidak boleh menghitung semua GPS point secara mentah.
-
-Tracking engine harus mampu menolak point yang jelas tidak masuk akal.
-
-Pertimbangkan:
-
-- reported accuracy,
-- duplicate point,
-- timestamp invalid,
-- teleport/jump,
-- unrealistic speed,
-- point ketika session paused.
-
-Threshold tidak boleh tersebar sebagai magic number di UI.
-
-Semua aturan filtering ditempatkan dalam tracking/domain layer sehingga dapat diuji dan diubah.
-
----
-
-# 15. Distance Calculation
-
-Distance dihitung dari accepted GPS points secara berurutan.
-
-Sistem harus membedakan:
-
-- raw GPS distance,
-- accepted/calculated distance.
-
-Distance tidak boleh bertambah ketika activity berada dalam status paused.
-
----
-
-# 16. Duration
-
-Minimal terdapat dua konsep waktu:
-
-### Elapsed Time
-
-Waktu dari Start sampai Stop.
-
-### Moving / Active Time
-
-Waktu recording tanpa periode pause manual.
-
-UI MVP boleh memprioritaskan active duration, tetapi model data harus membedakan keduanya.
-
----
-
-# 17. Pace dan Speed
-
-Untuk:
-
-### Running / Walking / Hiking
-
-Metric utama:
-
-`pace = time / distance`
-
-ditampilkan sebagai misalnya:
-
-`5:42 /km`
-
-### Cycling
-
-Metric utama:
-
-`speed = distance / time`
-
-misalnya:
-
-`24.3 km/h`
-
-Average metric dihitung berdasarkan aktivitas yang telah diterima tracking engine.
-
-Current pace tidak boleh dihitung hanya dari satu GPS point karena terlalu noisy.
-
-Gunakan moving window/smoothing pada implementasi tracking.
-
----
-
-# 18. Elevation
-
-Elevation dianggap **best-effort metric** untuk MVP.
-
-GPS altitude dapat disimpan jika tersedia.
-
-Namun kegagalan atau ketidakakuratan altitude tidak boleh membuat recording gagal.
-
-Elevation gain dapat ditampilkan setelah kualitas algoritmanya telah tervalidasi.
-
-Jika kualitas elevation belum cukup baik, tampilkan tanpa elevation daripada memberikan angka palsu.
-
----
-
-# 19. Stop Activity
-
-Stop harus berbeda dengan Pause.
-
-Untuk mencegah accidental stop, aplikasi meminta konfirmasi.
-
-Contoh:
-
-`Finish this activity?`
-
-Jika user memilih cancel:
-
-tracking berlanjut.
-
-Jika confirm:
-
-tracking service dihentikan dan aplikasi menuju Activity Summary.
-
----
-
-# 20. Activity Summary
-
-Setelah activity selesai, tampilkan:
-
-- route map,
-- activity type,
-- distance,
-- active duration,
-- average pace/speed,
-- start/end time,
-- elevation jika valid.
-
-User dapat menambahkan:
-
-- title,
-- description.
-
-Photo dan privacy boleh tetap terdapat dalam data model, tetapi photo upload tidak menjadi blocker untuk MVP awal.
-
-Primary action:
-
-`Save Activity`
-
----
-
-# 21. Local Storage
-
-Activity harus tersimpan di perangkat sebelum sinkronisasi backend dianggap berhasil.
-
-Minimum entities:
-
-## Activity
-
-- id
-- userId
-- activityType
-- title
-- description
-- startedAt
-- endedAt
-- elapsedDuration
-- movingDuration
-- distance
-- averageSpeed
-- averagePace
-- elevationGain
-- privacy
-- syncStatus
-- createdAt
-- updatedAt
-
-## TrackPoint
-
-- id
-- activityId
-- latitude
-- longitude
-- altitude
-- accuracy
-- speed
-- recordedAt
-- accepted
-
----
-
-# 22. Crash Recovery
-
-Ini merupakan requirement MVP, bukan fitur tambahan.
-
-Jika aplikasi atau proses Flutter mati ketika aktivitas berlangsung, aplikasi harus berusaha memulihkan session terakhir.
-
-Setidaknya session state dan accepted track points disimpan secara incremental.
-
-Ketika aplikasi dibuka kembali:
-
-jika ditemukan unfinished activity, user diberi pilihan yang sesuai berdasarkan keadaan tracking service/session.
-
-Activity tidak boleh hanya berada di RAM.
-
----
-
-# 23. Backend Synchronization
-
-Sinkronisasi backend diperlakukan sebagai proses terpisah dari recording.
-
-Sync status:
-
-- LOCAL_ONLY
-- PENDING
-- SYNCING
-- SYNCED
-- FAILED
-
-Jika internet terputus:
-
-activity tetap tersimpan.
-
-Ketika koneksi tersedia:
-
-activity dapat dicoba disinkronkan kembali.
-
-Recording tidak boleh gagal karena Firebase/remote backend tidak tersedia.
-
----
-
-# 24. Activity History
-
-User dapat membuka daftar activity yang sudah tersimpan.
-
-Setiap list item minimal menampilkan:
-
-- type,
-- date,
-- distance,
-- duration,
-- pace/speed.
-
-Urutan default:
-
-terbaru → terlama.
-
----
-
-# 25. Activity Detail
-
-Detail activity menampilkan:
-
-- route map,
-- activity type,
-- date/time,
-- distance,
-- duration,
-- average pace/speed,
-- elevation jika tersedia.
-
-User dapat:
-
-- edit title,
-- edit description,
-- menghapus activity.
-
-Untuk MVP, route map dan statistik jauh lebih penting daripada chart kompleks.
-
----
-
-# 26. Delete Activity
-
-Deletion harus menggunakan confirmation dialog.
-
-Activity yang telah dihapus:
-
-- hilang dari history,
-- tidak dihitung dalam dashboard,
-- mengikuti deletion/sync strategy terhadap remote backend.
-
----
-
-# 27. Dashboard
-
-Dashboard MVP hanya berfungsi sebagai progress summary.
-
-Filter:
-
-- This Week
-- This Month
-
-Metric:
-
-- total distance,
-- total active time,
-- number of activities.
-
-Opsional setelah stabil:
-
-- comparison dengan periode sebelumnya.
-
-Dashboard tidak memerlukan recommendation engine atau AI.
-
----
-
-# 28. Profile
-
-Profile minimal berisi:
-
-- display name,
-- profile photo opsional,
-- preferred unit,
-- total distance,
-- total activities,
-- total activity time.
-
-Unit awal:
-
-- metric / km.
-
-Imperial dapat ditambahkan setelah core MVP stabil jika ingin mengurangi scope awal.
-
----
-
-# 29. Offline Behaviour
-
-User harus tetap dapat:
-
-- memulai activity,
-- merekam GPS,
-- pause,
-- resume,
-- stop,
-- menyimpan activity,
-- melihat history lokal,
-
-tanpa koneksi internet.
-
-Fitur yang membutuhkan backend boleh menunjukkan status pending/offline.
-
----
-
-# 30. Permission UX
-
-Aplikasi tidak meminta semua permission langsung ketika pertama dibuka.
-
-Permission diminta ketika relevan terhadap tindakan user.
-
-Contoh:
-
-User memilih Start Activity.
-
-Aplikasi menjelaskan bahwa lokasi digunakan untuk merekam rute, distance, dan pace.
-
-Setelah itu baru permission Android ditampilkan.
-
-Jika permission ditolak:
-
-- jangan crash,
-- jelaskan konsekuensinya,
-- berikan cara retry.
-
----
-
-# 31. Error States
-
-MVP harus menangani minimal:
-
-- GPS disabled,
-- location permission denied,
-- location permission permanently denied,
-- GPS signal poor,
-- no internet,
-- sync failure,
-- foreground tracking failure,
-- database write failure,
-- activity already active,
-- application reopened during active session,
-- malformed GPS point.
-
-Error tidak boleh sekadar dicetak ke console.
-
-User-facing failure harus memiliki recovery path bila memungkinkan.
-
----
-
-# 32. Data Privacy
-
-Lokasi merupakan data sensitif.
-
-MVP harus mengikuti prinsip:
-
-- hanya merekam saat user secara eksplisit memulai activity,
-- tracking berhenti saat activity selesai,
-- tidak melakukan passive tracking,
-- tidak menggunakan location untuk iklan,
-- tidak membagikan route secara publik secara default.
-
-Default privacy yang disarankan:
-
-`Private`
-
-sampai fitur sosial benar-benar tersedia.
-
----
-
-# 33. Analytics & Logging
-
-Development logging perlu mencatat event penting seperti:
-
-- tracking_started,
-- tracking_paused,
-- tracking_resumed,
-- tracking_stopped,
-- location_point_received,
-- location_point_rejected,
-- activity_saved,
-- sync_started,
-- sync_failed,
-- sync_completed.
-
-Jangan memasukkan latitude/longitude mentah ke external telemetry tanpa kebutuhan dan kebijakan privasi yang jelas.
-
----
-
-# 34. MVP Acceptance Criteria
-
-MVP hanya dianggap selesai jika semua kondisi berikut terpenuhi.
-
-### Recording
-
-- Activity dapat dimulai.
-- GPS route muncul.
-- Distance bertambah secara masuk akal.
-- Timer berjalan.
-- Pause bekerja.
-- Resume bekerja.
-- Stop bekerja.
-
-### Background
-
-- Tracking tetap berjalan ketika app diminimalkan.
-- Tracking tetap berjalan ketika layar mati.
-- Persistent foreground notification tampil.
-- Kembali ke aplikasi tidak membuat session baru.
-
-### Reliability
-
-- Recording tidak hanya tersimpan di memory.
-- Activity dapat dipulihkan setelah application restart sesuai kondisi yang didukung.
-- Tidak ada double-running session.
-- GPS point buruk tidak langsung merusak total distance.
-
-### Storage
-
-- Activity tersimpan secara lokal.
-- Activity muncul kembali setelah aplikasi direstart.
-- History dapat dibuka offline.
-
-### Sync
-
-- Kegagalan internet tidak menghilangkan activity.
-- Failed sync dapat dicoba ulang.
-- Sync tidak membuat duplicate activity.
-
-### History
-
-- Activity list tersedia.
-- Activity detail dapat dibuka.
-- Route tersimpan dapat ditampilkan kembali.
-- Activity dapat diedit dan dihapus.
-
-### Dashboard
-
-- Statistik mingguan dapat dihitung dari aktivitas.
-- Statistik bulanan dapat dihitung dari aktivitas.
-
----
-
-# 35. MVP Success Metrics
-
-Untuk development/beta awal:
-
-### Tracking completion rate
-
-Persentase activity yang berhasil dari Start sampai Save.
-
-Target:
-
-`>95%`
-
-### Crash-free recording
-
-Tidak ada crash selama sesi tracking normal.
-
-### Distance reliability
-
-Hasil distance berada dalam range yang masuk akal dibanding reference tracker/test route.
-
-### Background survival
-
-Tracking tetap berjalan dalam tes layar mati dan app background.
-
-### Data-loss rate
-
-Target:
-
-`0 activity hilang setelah user menekan Stop/Save`.
-
----
-
-# 36. Recommended Technical Architecture
-
-Struktur modular:
+Struktur project memisahkan domain logic, core engine, services, dan UI secara modular:
 
 ```text
 lib/
 ├── app/
+│   ├── config/
+│   │   ├── app_theme.dart          # Tema modern: Dark Neon, Stravo Orange, Topo
+│   │   └── routes.dart
+│   └── stravo_app.dart
+│
 ├── core/
+│   ├── constants/
+│   ├── database/                   # Drift SQLite schema, migrations, spatial tables
+│   │   ├── app_database.dart
+│   │   ├── tables/
+│   │   └── daos/
 │   ├── error/
-│   ├── location/
-│   ├── permissions/
-│   └── utils/
+│   ├── location/                   # Core GPS Streamer, Kalman Filter, Plausibility Check
+│   │   ├── gps_engine.dart
+│   │   ├── kalman_filter.dart
+│   │   └── auto_pause_detector.dart
+│   ├── permissions/                # Android 10+ background permission flow
+│   ├── sensors/                    # BLE Cadence, Speed & Heart Rate Monitor
+│   ├── utils/                      # Geo math, unit converters, formatting
+│   └── weather/                    # Open-Meteo client (Wind direction & speed)
 │
 ├── features/
-│   ├── auth/
-│   ├── recording/
+│   ├── recording/                  # Sesi pencatatan live
 │   │   ├── data/
-│   │   ├── domain/
+│   │   ├── domain/models/
 │   │   └── presentation/
+│   │       ├── screens/recording_screen.dart
+│   │       └── widgets/live_telemetry_hud.dart
 │   │
-│   ├── activity_history/
-│   ├── dashboard/
-│   └── profile/
+│   ├── map_3d/                     # Modul Peta 3D & Replay
+│   │   ├── controllers/camera_3d_controller.dart
+│   │   ├── widgets/terrain_3d_map.dart
+│   │   └── widgets/flyover_player.dart
+│   │
+│   ├── footage_generator/          # Generator Video Rekap & Story Cards
+│   │   ├── services/video_render_service.dart
+│   │   ├── painters/route_canvas_painter.dart
+│   │   └── presentation/story_card_exporter_sheet.dart
+│   │
+│   ├── gravel_analytics/           # Modul Khusus Sepeda Gravel & Trail
+│   │   ├── surface_classifier.dart
+│   │   ├── climb_gradient_calculator.dart
+│   │   └── wind_resistance_analyzer.dart
+│   │
+│   ├── heatmap/                    # Modul Personal Heatmap (2D & 3D)
+│   │   ├── heatmap_tile_generator.dart
+│   │   └── presentation/personal_heatmap_screen.dart
+│   │
+│   ├── segments/                   # Live Segments & Ghost Competitor
+│   │   ├── segment_matcher.dart
+│   │   ├── ghost_pacer_engine.dart
+│   │   └── presentation/segment_hud_widget.dart
+│   │
+│   ├── activity_history/           # Riwayat, list filter, detail activity
+│   │   ├── presentation/activity_list_screen.dart
+│   │   └── presentation/activity_detail_screen.dart
+│   │
+│   ├── dashboard/                  # Ringkasan mingguan/bulanan, PR, fitness status
+│   └── profile/                    # Profil user, gear/bike management (Gravel/Road)
 │
 ├── services/
-│   ├── tracking/
-│   ├── background/
-│   └── sync/
+│   ├── background/                 # Android Foreground Service task handler
+│   │   └── background_task_handler.dart
+│   ├── audio_cues/                 # Text-to-speech feedback (split km, ghost pacer)
+│   └── export_import/              # GPX / FIT / TCX parsers
 │
 └── main.dart
 ```
 
-Tracking logic tidak boleh diletakkan langsung di widget Flutter.
+---
 
-UI hanya berinteraksi dengan tracking controller/domain abstraction.
+# 9. Rencana Fase Pengembangan (Roadmap Eksekusi)
+
+### Phase 1: Rock-Solid Tracking Engine & Foreground Service (Fondasi Utama)
+- Integrasi `geolocator` dan `flutter_foreground_task`.
+- Implementasi filter akurasi GPS, Kalman smoothing, dan deteksi auto-pause.
+- Notifikasi status persisten Android dengan timer live dan kontrol Pause/Resume.
+- SQLite incremental flush: jaminan tidak ada data hilang saat crash.
+
+### Phase 2: Domain Metrik Multi-Sport (Spesialisasi Gravel & Trail)
+- Model data multi-sport: Gravel Cycling, Road Cycling, MTB, Road Run, Trail Run, Hike.
+- Algoritma Surface Profiler (klasifikasi aspal, gravel, makadam/trail).
+- Perhitungan Grade Adjusted Pace (GAP) untuk lari dan Gradient Index untuk tanjakan sepeda.
+- Integrasi Open-Meteo untuk arah angin (Headwind / Tailwind).
+
+### Phase 3: Peta 3D & Terrain Topografi
+- Setup **MapLibre GL** dengan raster Digital Elevation Model (DEM) / Terrarium tiles.
+- Pengaturan tilt 3D, rotasi 360°, dan hillshading kontur gunung.
+- Dynamic polyline rendering: pewarnaan rute berdasarkan kecepatan (*Speed Heat*), elevasi (*Elevation Shading*), atau tipe permukaan.
+
+### Phase 4: Cinematic 3D Route Flyover (Replay Animasi Rute)
+- Pemutar animasi rute dengan pergerakan kamera dinamis yang mengikuti rute GPS.
+- Floating HUD telemetri (kecepatan, gradien tanjakan, elevasi berjalan).
+- Kontrol pemutaran video interaktif (Play, Pause, Scrubbing, Speed Multiplier).
+
+### Phase 5: In-Ride Photos & Auto-Footage Video Generator
+- Quick photo capture saat gowes/lari dengan auto-geotagging & elevasi.
+- Video generator on-device (`ffmpeg_kit_flutter` + Skia Canvas) yang menyatukan animasi rute 3D, pop-up foto, dan ringkasan metrik menjadi file MP4/GIF siap share.
+- Pembuat kartu visual media sosial (9:16 Story Cards & 1:1 Feed Cards) dengan berbagai tema desain.
+
+### Phase 6: Fitur Map Premium Ekstra (Personal Heatmap & Live Segments)
+- Personal Heatmap 2D & 3D per kategori olahraga.
+- Custom Live Segments dengan fitur **Virtual Ghost Competitor** & audio cues.
+- Universal GPX/FIT Export & Import.
 
 ---
 
-# 37. Recommended Development Order
+# 10. Indikator Keberhasilan (Definition of Success)
 
-## Phase 0 — Tracking Technical Spike
-
-Belum membuat aplikasi lengkap.
-
-Buktikan terlebih dahulu:
-
-- GPS stream,
-- foreground service,
-- layar mati,
-- background,
-- pause/resume,
-- route point persistence.
-
-**Exit condition:** 30–60 menit tracking nyata tidak kehilangan session.
-
----
-
-## Phase 1 — Tracking Domain
-
-Implement:
-
-- tracking state machine,
-- location model,
-- distance calculation,
-- GPS filtering,
-- timer logic,
-- pause/resume,
-- persistence.
-
-Semua logic yang dapat diuji harus memiliki unit tests.
-
----
-
-## Phase 2 — Recording UI
-
-Implement:
-
-- activity selector,
-- readiness screen,
-- recording screen,
-- live map,
-- statistics,
-- Stop flow.
-
----
-
-## Phase 3 — Local Activity Management
-
-Implement:
-
-- local database,
-- save activity,
-- history,
-- detail,
-- edit,
-- delete,
-- crash/session recovery.
-
----
-
-## Phase 4 — Authentication
-
-Implement:
-
-- Firebase Auth,
-- email,
-- Google Sign-In,
-- account mapping.
-
-Auth sengaja tidak menjadi pekerjaan pertama karena auth bukan risiko teknis utama produk.
-
----
-
-## Phase 5 — Cloud Sync
-
-Implement:
-
-- Firebase storage model,
-- sync queue,
-- retry,
-- duplicate protection,
-- offline handling.
-
----
-
-## Phase 6 — Dashboard
-
-Implement:
-
-- weekly aggregation,
-- monthly aggregation,
-- profile totals.
-
----
-
-## Phase 7 — Hardening
-
-Test:
-
-- Android versions,
-- several phone vendors,
-- background,
-- screen off,
-- poor GPS,
-- loss of network,
-- process restart,
-- low battery,
-- long activity.
-
-Setelah Phase 7 stabil, MVP dapat dianggap release candidate.
-
----
-
-# 38. Post-MVP
-
-Urutan ekspansi yang disarankan:
-
-### V1.1
-
-- charts,
-- personal records,
-- richer activity statistics,
-- photos,
-- better elevation processing.
-
-### V1.2
-
-- public profile,
-- follow,
-- activity feed.
-
-### V1.3
-
-- kudos,
-- comments,
-- notification system.
-
-### V1.4+
-
-- challenges,
-- segments,
-- leaderboards.
-
-Segments sengaja ditempatkan jauh setelah MVP karena memerlukan sistem geospatial matching dan anti-cheat yang jauh lebih kompleks dibanding sekadar menampilkan route.
-
----
-
-# 39. MVP Product Definition
-
-MVP bukan:
-
-> aplikasi sosial olahraga sederhana seperti Strava.
-
-MVP adalah:
-
-> GPS workout recorder yang dapat dipercaya di Android, tetap merekam ketika layar mati, menyimpan aktivitas secara local-first, dan memberikan history serta progress dasar.
-
-Semua keputusan scope harus diuji terhadap definisi tersebut.
+1. **Stabilitas Latar Belakang**: 0% sesi terputus atau terhenti saat layar mati selama gowes/lari berdurasi 1 hingga 5 jam.
+2. **Kualitas Data**: Jarak dan elevasi selaras dengan unit GPS terdedikasi (Garmin / Wahoo) dengan deviasi < 3%.
+3. **Performa 3D**: Render rute 3D dan animasi flyover berjalan lancar pada 60 FPS di perangkat Android kelas menengah.
+4. **Kecepatan Generator Footage**: Ekspor video rekap MP4 selesai dalam waktu kurang dari 30 detik secara lokal di perangkat.
+5. **Zero Bill**: Seluruh fungsionalitas berjalan lancar tanpa memerlukan satu pun langganan API berbayar.
