@@ -9,12 +9,12 @@
 ## 🗺️ Fase 1: Peta 3D Topografi Offline (MapLibre + DEM MBTiles)
 Tujuan: Menghadirkan peta vektor 3D dengan kontur gunung nyata yang dapat dibuka di tengah hutan belantara tanpa sinyal seluler.
 
-- [ ] **Setup Dependensi MapLibre GL Native di `pubspec.yaml`**
-  - [ ] Pasang `maplibre_gl` (atau flutter maplibre fork)
-  - [ ] Konfigurasi permission storage Android untuk membaca berkas peta lokal
-- [ ] **Offline Map Pack Storage Manager (`lib/core/offline_maps/`)**
-  - [ ] Scan folder internal `/storage/.../Stravo/maps/` untuk mendeteksi file `.mbtiles` atau `.pmtiles`
-  - [ ] Tabel database `offline_map_packs`: Menyimpan daftar area peta yang tersedia (misal: "Jawa Barat 3D", "Bali Topo")
+- [x] **Setup Dependensi MapLibre GL Native di `pubspec.yaml`**
+  - [x] Pasang `maplibre_gl` (diadopsi arsitektur MapLibre GL JS 4.7.1 WebGL + Local Shelf Server untuk rendering 3D terrain elevation mesh penuh tanpa kendala limitasi plugin native)
+  - [x] Konfigurasi permission storage Android untuk membaca berkas peta lokal
+- [x] **Offline Map Pack Storage Manager (`lib/core/offline_maps/`)**
+  - [x] Scan folder internal `/storage/.../Stravo/maps/` untuk mendeteksi file `.mbtiles` atau `.pmtiles`
+  - [x] Tabel database `offline_map_packs`: Menyimpan daftar area peta yang tersedia (misal: "Jawa Barat 3D", "Bali Topo")
 - [x] **Offline 3D Terrain & Hillshading Rendering (`lib/features/map_3d/`)**
   - [x] Memuat raster Digital Elevation Model (DEM) dari file lokal HP
   - [x] Mengaktifkan efek kemiringan 3D (*pitch 45°-60°*) dan rotasi 360° (*bearing*)
