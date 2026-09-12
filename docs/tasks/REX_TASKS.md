@@ -19,8 +19,8 @@ Tujuan: Menghadirkan peta vektor 3D dengan kontur gunung nyata yang dapat dibuka
   - [ ] Memuat raster Digital Elevation Model (DEM) dari file lokal HP
   - [ ] Mengaktifkan efek kemiringan 3D (*pitch 45°-60°*) dan rotasi 360° (*bearing*)
   - [ ] Efek bayangan kontur gunung (*hillshading*) untuk memperlihatkan lembah dan punggungan bukit
-- [ ] **Color-Coded Dynamic Polylines**
-  - [ ] Garis lintasan di peta diberi warna gradien berdasarkan:
+- [x] **Color-Coded Dynamic Polylines**
+  - [x] Garis lintasan di peta diberi warna gradien berdasarkan:
     - *Speed Heat*: Biru (santai) $\rightarrow$ Hijau $\rightarrow$ Kuning $\rightarrow$ Merah (sprint)
     - *Elevation Gradient*: Warna elevasi dari titik terendah ke tertinggi
     - *Surface Type*: Hijau (Aspal), Oranye (Gravel), Cokelat (Makadam/Tanah)
