@@ -48,16 +48,16 @@ Tujuan: Menghadirkan fitur peninjauan rute sinematik pasca-olahraga ala Relive /
 ## 🎬 Fase 3: On-Device Video Footage Generator & Story Cards (100% di HP)
 Tujuan: Menghasilkan video rekap MP4 siap share ke Instagram Stories dan WhatsApp Status dalam waktu < 45 detik tanpa server.
 
-- [ ] **Integrasi On-Device Video Renderer (`lib/features/footage_generator/services/on_device_video_renderer.dart`)**
-  - [ ] Memanfaatkan hardware video encoder ponsel Android (`ffmpeg_kit_flutter` atau Skia Native Canvas frame grabber)
-- [ ] **Komposisi Video Animasi 30 Detik (9:16 & 1:1)**:
-  - [ ] *Detik 0 - 3*: Intro sinematik (Judul rute, tanggal, jenis olahraga, jarak total)
-  - [ ] *Detik 3 - 24*: Kamera 3D menelusuri rute dengan garis bercahaya neon (*tracer*)
-  - [ ] *Saat melewati KM waypoint*: Pop-up foto waypoint muncul secara elegan di samping rute
-  - [ ] *Bagian bawah layar*: Grafik profil elevasi berjalan mengikuti titik rute
-  - [ ] *Detik 25 - 30*: Layar ringkasan akhir (Total Jarak, Total Waktu, Elevation Gain, Max Speed)
-- [ ] **Ekspor Otomatis ke Galeri Ponsel**
-  - [ ] Menyimpan berkas MP4 beresolusi Full HD (1080x1920) langsung ke folder DCIM/Stravo di HP
+- [x] **Integrasi On-Device Video Renderer (`lib/features/footage_generator/services/on_device_video_renderer.dart`)**
+  - [x] Memanfaatkan hardware video encoder ponsel Android (`ffmpeg_kit_flutter` atau Skia Native Canvas frame grabber)
+- [x] **Komposisi Video Animasi 30 Detik (9:16 & 1:1)**:
+  - [x] *Detik 0 - 3*: Intro sinematik (Judul rute, tanggal, jenis olahraga, jarak total)
+  - [x] *Detik 3 - 24*: Kamera 3D menelusuri rute dengan garis bercahaya neon (*tracer*)
+  - [x] *Saat melewati KM waypoint*: Pop-up foto waypoint muncul secara elegan di samping rute
+  - [x] *Bagian bawah layar*: Grafik profil elevasi berjalan mengikuti titik rute
+  - [x] *Detik 25 - 30*: Layar ringkasan akhir (Total Jarak, Total Waktu, Elevation Gain, Max Speed)
+- [x] **Ekspor Otomatis ke Galeri Ponsel**
+  - [x] Menyimpan berkas MP4 beresolusi Full HD (1080x1920) langsung ke folder DCIM/Stravo di HP
 - [x] **Generator Dynamic Social Story Cards (PNG Resolusi Tinggi)**
   - [x] Merender widget visual menjadi gambar PNG kristal jernih untuk Instagram Stories & WhatsApp Status
 
