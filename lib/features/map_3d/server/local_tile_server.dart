@@ -763,6 +763,61 @@ class LocalTileServer {
         } else {
           map.setTerrain(null);
         }
+      },
+      setRouteGeoJson: function(geoJsonData) {
+        if (!map) return;
+        try {
+          var geoJson = typeof geoJsonData === 'string' ? JSON.parse(geoJsonData) : geoJsonData;
+          var source = map.getSource('route-polyline');
+          if (source) {
+            source.setData(geoJson);
+          } else {
+            map.addSource('route-polyline', {
+              type: 'geojson',
+              data: geoJson
+            });
+            map.addLayer({
+              id: 'route-casing',
+              type: 'line',
+              source: 'route-polyline',
+              layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+              },
+              paint: {
+                'line-color': '#000000',
+                'line-width': 6.0,
+                'line-opacity': 0.65
+              }
+            });
+            map.addLayer({
+              id: 'route-line',
+              type: 'line',
+              source: 'route-polyline',
+              layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+              },
+              paint: {
+                'line-color': ['get', 'color'],
+                'line-width': 4.0
+              }
+            });
+          }
+        } catch(e) {
+          console.error('[stravoApi] setRouteGeoJson error:', e);
+        }
+      },
+      clearRoute: function() {
+        if (!map) return;
+        try {
+          var source = map.getSource('route-polyline');
+          if (source) {
+            source.setData({ type: 'FeatureCollection', features: [] });
+          }
+        } catch(e) {
+          console.error('[stravoApi] clearRoute error:', e);
+        }
       }
     };
 

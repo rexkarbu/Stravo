@@ -15,10 +15,10 @@ Tujuan: Menghadirkan peta vektor 3D dengan kontur gunung nyata yang dapat dibuka
 - [ ] **Offline Map Pack Storage Manager (`lib/core/offline_maps/`)**
   - [ ] Scan folder internal `/storage/.../Stravo/maps/` untuk mendeteksi file `.mbtiles` atau `.pmtiles`
   - [ ] Tabel database `offline_map_packs`: Menyimpan daftar area peta yang tersedia (misal: "Jawa Barat 3D", "Bali Topo")
-- [ ] **Offline 3D Terrain & Hillshading Rendering (`lib/features/map_3d/`)**
-  - [ ] Memuat raster Digital Elevation Model (DEM) dari file lokal HP
-  - [ ] Mengaktifkan efek kemiringan 3D (*pitch 45°-60°*) dan rotasi 360° (*bearing*)
-  - [ ] Efek bayangan kontur gunung (*hillshading*) untuk memperlihatkan lembah dan punggungan bukit
+- [x] **Offline 3D Terrain & Hillshading Rendering (`lib/features/map_3d/`)**
+  - [x] Memuat raster Digital Elevation Model (DEM) dari file lokal HP
+  - [x] Mengaktifkan efek kemiringan 3D (*pitch 45°-60°*) dan rotasi 360° (*bearing*)
+  - [x] Efek bayangan kontur gunung (*hillshading*) untuk memperlihatkan lembah dan punggungan bukit
 - [x] **Color-Coded Dynamic Polylines**
   - [x] Garis lintasan di peta diberi warna gradien berdasarkan:
     - *Speed Heat*: Biru (santai) $\rightarrow$ Hijau $\rightarrow$ Kuning $\rightarrow$ Merah (sprint)
@@ -30,13 +30,13 @@ Tujuan: Menghadirkan peta vektor 3D dengan kontur gunung nyata yang dapat dibuka
 ## ✈️ Fase 2: Cinematic 3D Route Flyover (Replay Animasi Rute)
 Tujuan: Menghadirkan fitur peninjauan rute sinematik pasca-olahraga ala Relive / Strava 3D Flyover langsung di HP.
 
-- [ ] **Interpolasi Kurva Bézier Kamera 3D (`lib/features/map_3d/controllers/camera_3d_controller.dart`)**
-  - [ ] Mengambil daftar titik koordinat dari `track_points` aktivitas
-  - [ ] Menginterpolasikan pergerakan kamera agar meluncur mulus di sepanjang rute GPS tanpa patah-patah
-- [ ] **Koreografi Kamera Sinematik Dinamis**
-  - [ ] Kamera otomatis mendekat (*zoom in*) dan memiring (*tilt down*) saat mendaki tanjakan curam
-  - [ ] Kamera otomatis menjauh (*zoom out*) di puncak ketinggian untuk memperlihatkan panorama luas
-  - [ ] Kamera memutar halus mengikuti arah tikungan jalan (*bearing rotation*)
+- [x] **Interpolasi Kurva Bézier Kamera 3D (`lib/features/map_3d/controllers/camera_3d_controller.dart`)**
+  - [x] Mengambil daftar titik koordinat dari `track_points` aktivitas
+  - [x] Menginterpolasikan pergerakan kamera agar meluncur mulus di sepanjang rute GPS tanpa patah-patah
+- [x] **Koreografi Kamera Sinematik Dinamis**
+  - [x] Kamera otomatis mendekat (*zoom in*) dan memiring (*tilt down*) saat mendaki tanjakan curam
+  - [x] Kamera otomatis menjauh (*zoom out*) di puncak ketinggian untuk memperlihatkan panorama luas
+  - [x] Kamera memutar halus mengikuti arah tikungan jalan (*bearing rotation*)
 - [ ] **Floating Telemetry HUD Sinkron**
   - [ ] Kotak overlay HUD transparan yang menampilkan kecepatan, elevasi, tanjakan %, dan jarak tempuh yang nilainya berubah sinkron dengan pergerakan kamera 3D
 - [ ] **Kontrol Interaktif Pemutar Flyover (`lib/features/map_3d/widgets/flyover_player.dart`)**

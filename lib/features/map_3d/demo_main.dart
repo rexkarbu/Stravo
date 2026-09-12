@@ -2,6 +2,10 @@
 
 import 'server/demo_pack_manager.dart';
 import 'server/local_tile_server.dart';
+import '../../core/constants/enums.dart';
+import 'domain/calculators/polyline_color_calculator.dart';
+import 'domain/models/colored_route_segment.dart';
+import 'domain/models/route_coordinate.dart';
 import 'widgets/terrain_map_webview.dart';
 
 /// Demo Spike entry point for 3D Terrain Proof-of-Concept.
@@ -51,6 +55,63 @@ class _DemoMainPageState extends State<DemoMainPage> {
   TerrainMapState _mapState = TerrainMapState.loading;
   Map<String, bool>? _assetStatus;
   Map<String, dynamic>? _readyData;
+  final GlobalKey<TerrainMapWebViewState> _webKey = GlobalKey<TerrainMapWebViewState>();
+  String _activePolylineMode = 'Off';
+
+  // Realistic sample route around Kamojang Crater (20 GPS trackpoints)
+  static final List<RouteCoordinate> _kamojangRoute = [
+    RouteCoordinate(latitude: -7.1550, longitude: 107.7800, elevation: 1420.0, speed: 6.0, surfaceType: SurfaceType.asphalt),
+    RouteCoordinate(latitude: -7.1545, longitude: 107.7820, elevation: 1435.0, speed: 6.5, surfaceType: SurfaceType.asphalt),
+    RouteCoordinate(latitude: -7.1538, longitude: 107.7845, elevation: 1450.0, speed: 5.5, surfaceType: SurfaceType.asphalt),
+    RouteCoordinate(latitude: -7.1530, longitude: 107.7870, elevation: 1475.0, speed: 4.8, surfaceType: SurfaceType.smoothGravel),
+    RouteCoordinate(latitude: -7.1520, longitude: 107.7895, elevation: 1510.0, speed: 4.0, surfaceType: SurfaceType.smoothGravel),
+    RouteCoordinate(latitude: -7.1510, longitude: 107.7920, elevation: 1545.0, speed: 3.5, surfaceType: SurfaceType.smoothGravel),
+    RouteCoordinate(latitude: -7.1505, longitude: 107.7945, elevation: 1580.0, speed: 3.2, surfaceType: SurfaceType.roughGravel),
+    RouteCoordinate(latitude: -7.1500, longitude: 107.7970, elevation: 1615.0, speed: 3.0, surfaceType: SurfaceType.roughGravel),
+    RouteCoordinate(latitude: -7.1502, longitude: 107.7995, elevation: 1640.0, speed: 3.4, surfaceType: SurfaceType.roughGravel),
+    RouteCoordinate(latitude: -7.1510, longitude: 107.8015, elevation: 1675.0, speed: 3.8, surfaceType: SurfaceType.dirt), // Summit
+    RouteCoordinate(latitude: -7.1525, longitude: 107.8030, elevation: 1660.0, speed: 6.5, surfaceType: SurfaceType.dirt),
+    RouteCoordinate(latitude: -7.1540, longitude: 107.8040, elevation: 1630.0, speed: 9.0, surfaceType: SurfaceType.dirt),
+    RouteCoordinate(latitude: -7.1560, longitude: 107.8035, elevation: 1590.0, speed: 11.0, surfaceType: SurfaceType.roughGravel),
+    RouteCoordinate(latitude: -7.1580, longitude: 107.8015, elevation: 1550.0, speed: 12.5, surfaceType: SurfaceType.roughGravel),
+    RouteCoordinate(latitude: -7.1595, longitude: 107.7985, elevation: 1515.0, speed: 13.5, surfaceType: SurfaceType.smoothGravel),
+    RouteCoordinate(latitude: -7.1605, longitude: 107.7950, elevation: 1485.0, speed: 12.0, surfaceType: SurfaceType.smoothGravel),
+    RouteCoordinate(latitude: -7.1600, longitude: 107.7910, elevation: 1460.0, speed: 10.0, surfaceType: SurfaceType.cobblestone),
+    RouteCoordinate(latitude: -7.1585, longitude: 107.7870, elevation: 1445.0, speed: 8.5, surfaceType: SurfaceType.cobblestone),
+    RouteCoordinate(latitude: -7.1570, longitude: 107.7835, elevation: 1430.0, speed: 7.5, surfaceType: SurfaceType.asphalt),
+    RouteCoordinate(latitude: -7.1550, longitude: 107.7800, elevation: 1420.0, speed: 6.0, surfaceType: SurfaceType.asphalt),
+  ];
+
+  void _applyPolylineMode(String mode) {
+    if (!mounted) return;
+    setState(() => _activePolylineMode = mode);
+
+    if (mode == 'Off') {
+      _webKey.currentState?.clearRoute();
+      return;
+    }
+
+    PolylineColorMode colorMode;
+    switch (mode) {
+      case 'Speed Heat':
+        colorMode = PolylineColorMode.speedHeat;
+        break;
+      case 'Elevation':
+        colorMode = PolylineColorMode.elevationGradient;
+        break;
+      case 'Surface':
+        colorMode = PolylineColorMode.surfaceType;
+        break;
+      default:
+        return;
+    }
+
+    final segments = PolylineColorCalculator.calculate(
+      route: _kamojangRoute,
+      mode: colorMode,
+    );
+    _webKey.currentState?.setRouteSegments(segments);
+  }
 
   int _initGeneration = 0;
 
@@ -178,27 +239,85 @@ class _DemoMainPageState extends State<DemoMainPage> {
     return Column(
       children: [
         Expanded(
-          child: TerrainMapWebView(
-            baseUrl: _serverUrl!,
-            onStateChanged: (state) {
-              if (mounted) setState(() => _mapState = state);
-            },
-            onError: (msg) {
-              if (mounted) setState(() => _errorMessage = msg);
-            },
-            onLeakDetected: (url) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('External request blocked: $url'),
-                    backgroundColor: Colors.red.shade800,
+          child: Stack(
+            children: [
+              TerrainMapWebView(
+                key: _webKey,
+                baseUrl: _serverUrl!,
+                onStateChanged: (state) {
+                  if (mounted) setState(() => _mapState = state);
+                },
+                onError: (msg) {
+                  if (mounted) setState(() => _errorMessage = msg);
+                },
+                onLeakDetected: (url) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('External request blocked: $url'),
+                        backgroundColor: Colors.red.shade800,
+                      ),
+                    );
+                  }
+                },
+                onMapReady: (data) {
+                  if (mounted) {
+                    setState(() => _readyData = data);
+                    if (_activePolylineMode != 'Off') {
+                      _applyPolylineMode(_activePolylineMode);
+                    }
+                  }
+                },
+              ),
+              // Floating Polyline Mode Selector
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white24),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: ['Off', 'Speed Heat', 'Elevation', 'Surface'].map((mode) {
+                        final isSelected = _activePolylineMode == mode;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: InkWell(
+                            onTap: () => _applyPolylineMode(mode),
+                            borderRadius: BorderRadius.circular(16),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.greenAccent.shade700 : Colors.transparent,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                mode,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.white70,
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
-                );
-              }
-            },
-            onMapReady: (data) {
-              if (mounted) setState(() => _readyData = data);
-            },
+                ),
+              ),
+            ],
           ),
         ),
         // Status bar

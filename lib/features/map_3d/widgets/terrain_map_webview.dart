@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../domain/models/colored_route_segment.dart';
 
 /// States for the terrain map.
 enum TerrainMapState { loading, ready, error, rebuilding }
@@ -39,10 +40,10 @@ class TerrainMapWebView extends StatefulWidget {
   });
 
   @override
-  State<TerrainMapWebView> createState() => _TerrainMapWebViewState();
+  State<TerrainMapWebView> createState() => TerrainMapWebViewState();
 }
 
-class _TerrainMapWebViewState extends State<TerrainMapWebView>
+class TerrainMapWebViewState extends State<TerrainMapWebView>
     with WidgetsBindingObserver {
   late WebViewController _controller;
   TerrainMapState _state = TerrainMapState.loading;
@@ -198,6 +199,39 @@ class _TerrainMapWebViewState extends State<TerrainMapWebView>
     await _controller.runJavaScript(
       'window.stravoApi.setTerrain($enabled, $exaggeration)',
     );
+  }
+
+  /// Converts a list of [ColoredRouteSegment]s into a GeoJSON FeatureCollection string.
+  static String segmentsToGeoJson(List<ColoredRouteSegment> segments) {
+    final features = segments.map((seg) => {
+      'type': 'Feature',
+      'geometry': {
+        'type': 'LineString',
+        'coordinates': seg.toCoordinatesList(),
+      },
+      'properties': {
+        'color': seg.hexColor,
+        if (seg.metricValue != null) 'metric': seg.metricValue,
+        if (seg.surfaceType != null) 'surface': seg.surfaceType!.name,
+      },
+    }).toList();
+
+    return jsonEncode({
+      'type': 'FeatureCollection',
+      'features': features,
+    });
+  }
+
+  /// Sends route polyline segments to MapLibre to be rendered in 3D terrain.
+  Future<void> setRouteSegments(List<ColoredRouteSegment> segments) async {
+    final geoJson = segmentsToGeoJson(segments);
+    final jsArg = jsonEncode(geoJson);
+    await _controller.runJavaScript('window.stravoApi && window.stravoApi.setRouteGeoJson($jsArg)');
+  }
+
+  /// Clears any currently displayed route polyline from the map.
+  Future<void> clearRoute() async {
+    await _controller.runJavaScript('window.stravoApi && window.stravoApi.clearRoute()');
   }
 
   @override
