@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "name": "Kamojang Terrain Demo",
+  "description": "Offline 3D Terrain Proof-of-Concept for Mount Kamojang geothermal area, West Java, Indonesia",
+  "center": [
+    107.795,
+    -7.155
+  ],
+  "bounds": [
+    107.7,
+    -7.22,
+    107.89,
+    -7.09
+  ],
+  "elevation_range": {
+    "min_meters": 688.0,
+    "max_meters": 2278.0,
+    "center_meters": 1585.0
+  },
+  "engine": {
+    "library": "maplibre-gl-js",
+    "version": "4.7.1",
+    "license": "BSD-3-Clause",
+    "files": {
+      "maplibre-gl.js": {
+        "path": "map_engine/maplibre-gl.js",
+        "sha256": "be9633c4d870e26fb37f1cfe5c5a77181667114003ea16207ac7850d8da8add1",
+        "size_bytes": 803086
+      },
+      "maplibre-gl.css": {
+        "path": "map_engine/maplibre-gl.css",
+        "sha256": "576b085fdd9487a65a19215328c1e086c07ce5bf6da09b666b3806d3d008dae9",
+        "size_bytes": 65534
+      }
+    }
+  },
+  "sources": {
+    "dem": {
+      "file": "dem.mbtiles",
+      "type": "raster-dem",
+      "format": "png",
+      "compression": "none",
+      "encoding": "terrarium",
+      "encoding_base": -32768,
+      "encoding_interval": 0.00390625,
+      "zoom_min": 11,
+      "zoom_max": 13,
+      "tile_size": 256,
+      "tile_count": 37,
+      "source": "Nextzen / Mapzen Open Elevation Tiles (SRTM & Copernicus DEM GLO-30)",
+      "license": "Open Data / CC0 / Public Domain",
+      "sha256": "e210d8aca544c540cae0a4bb7b007daa81833a8e25abbf726a77fe90f6c4fbbf",
+      "size_bytes": 1564672
+    },
+    "vector": {
+      "file": "vector.mbtiles",
+      "type": "vector",
+      "format": "pbf",
+      "compression": "gzip",
+      "zoom_min": 11,
+      "zoom_max": 13,
+      "tile_size": 512,
+      "tile_count": 37,
+      "source": "OpenStreetMap official vector tiles (Shortbread v1)",
+      "license": "Open Database License (ODbL) / OpenStreetMap contributors",
+      "sha256": "4bbabc270f11d87909279c8499964af6ca9ea7bcec380679eddd42b7ea7b0f88",
+      "size_bytes": 1298432
+    }
+  },
+  "style": {
+    "file": "style.json",
+    "sha256": "2e29e17a818f07f379b8cf97c35dd48bd52d457256506ff2b69410af3761a64f",
+    "size_bytes": 2007
+  },
+  "glyphs": {
+    "Open Sans Regular": {
+      "range": "0-255.pbf",
+      "file": "glyphs/Open Sans Regular/0-255.pbf",
+      "sha256": "ef1f38a3f1978591e846e9eaddf8a54f7047f546fc6aaed7872cc53151a5de78",
+      "size_bytes": 76580,
+      "license": "SIL Open Font License (OFL)"
+    }
+  },
+  "notes": {
+    "dem_pipeline": [
+      "CRITICAL PRINCIPLE: Elevation resampling must be performed on raw elevation rasters (Float32/Int16) BEFORE Terrarium encoding.",
+      "Terrarium bit-packing formula: elev = (R * 256 + G + B / 256) - 32768.",
+      "Averaging or bilinear filtering on encoded RGB pixels corrupts elevation channels (e.g. green channel rollover causes >120m errors).",
+      "Pipeline steps:",
+      "1. Acquire DEM raster in EPSG:4326 or EPSG:3857 (e.g., Copernicus GLO-30 or SRTM 30m).",
+      "2. Warp/reproject raw elevation values to target tile grid resolutions (256x256 per tile at target zooms z11-z14) using bilinear or cubicspline on elevation data:",
+      "   gdalwarp -t_srs EPSG:3857 -r bilinear -tr <res_x> <res_y> raw_dem.tif resampled_dem.tif",
+      "3. Encode elevation to Terrarium RGB using rio-rgbify with exact interval 1/256 and base -32768:",
+      "   rio rgbify -b -32768 -i 0.00390625 resampled_dem.tif dem_terrarium.tif",
+      "4. When tiling from encoded raster with gdal2tiles.py, specify --resampling=near to prevent color-averaging adjacent pixels:",
+      "   gdal2tiles.py --xyz -z 11-13 --resampling=near dem_terrarium.tif tiles/",
+      "5. Package tiles to MBTiles with SQLite: table metadata and table tiles (zoom_level, tile_column, tile_row, tile_data).",
+      "6. Verify decoded elevation: query sample pixels with (R*256 + G + B/256) - 32768 and assert diff against source DEM < 0.00390625m."
+    ],
+    "vector_pipeline": [
+      "1. Acquire OpenStreetMap vector tile extract for bounding box 107.70,-7.22,107.89,-7.09.",
+      "2. Generate MVT tiles for zoom 11-13 with Planetiler or tilemaker.",
+      "3. Package into vector.mbtiles with SQLite schema."
+    ]
+  }
+}
