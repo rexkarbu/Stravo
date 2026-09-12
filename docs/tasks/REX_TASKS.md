@@ -77,10 +77,10 @@ Tujuan: Gamifikasi olahraga offline — bertanding melawan rekor sendiri di jala
   - [x] Menghitung selisih detik secara real-time saat pengguna melintasi segmen
   - [x] Memunculkan HUD: *"Kamu 3 detik di depan Ghost Pacer!"*
   - [x] Integrasi audio TTS suara: *"Mulai segmen Tanjakan Bukit! Rekor terbaikmu 4 menit 20 detik!"*
-- [ ] **Personal Heatmap 2D & 3D Offline (`lib/features/heatmap/`)**
-  - [ ] Mengambil seluruh koordinat aktivitas masa lalu dari database SQLite lokal
-  - [ ] Merender garis-garis rute menjadi layer heatmap berpendar neon di atas peta offline
-  - [ ] Filter kategori: Heatmap Gravel, Heatmap Lari, atau Semua
-- [ ] **Training Volume & PR Analytics Dashboard (`lib/features/dashboard/`)**
-  - [ ] Kalkulasi akumulasi kilometer mingguan dan bulanan
-  - [ ] Evaluasi otomatis Personal Records (Jarak terjauh, Kecepatan tertinggi, Elevasi terbesar)
+- [x] **Personal Heatmap 2D & 3D Offline (`lib/features/heatmap/`)**
+  - [x] Mengambil seluruh koordinat aktivitas masa lalu dari database SQLite lokal
+  - [x] Merender garis-garis rute menjadi layer heatmap berpendar neon di atas peta offline
+  - [x] Filter kategori: Heatmap Gravel, Heatmap Lari, atau Semua
+- [x] **Training Volume & PR Analytics Dashboard (`lib/features/dashboard/`)**
+  - [x] Kalkulasi akumulasi kilometer mingguan dan bulanan
+  - [x] Evaluasi otomatis Personal Records (Jarak terjauh, Kecepatan tertinggi, Elevasi terbesar)
