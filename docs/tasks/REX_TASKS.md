@@ -58,8 +58,8 @@ Tujuan: Menghasilkan video rekap MP4 siap share ke Instagram Stories dan WhatsAp
   - [ ] *Detik 25 - 30*: Layar ringkasan akhir (Total Jarak, Total Waktu, Elevation Gain, Max Speed)
 - [ ] **Ekspor Otomatis ke Galeri Ponsel**
   - [ ] Menyimpan berkas MP4 beresolusi Full HD (1080x1920) langsung ke folder DCIM/Stravo di HP
-- [ ] **Generator Dynamic Social Story Cards (PNG Resolusi Tinggi)**
-  - [ ] Merender widget visual menjadi gambar PNG kristal jernih untuk Instagram Stories & WhatsApp Status
+- [x] **Generator Dynamic Social Story Cards (PNG Resolusi Tinggi)**
+  - [x] Merender widget visual menjadi gambar PNG kristal jernih untuk Instagram Stories & WhatsApp Status
 
 ---
 
