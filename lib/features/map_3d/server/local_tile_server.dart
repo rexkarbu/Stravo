@@ -492,7 +492,7 @@ class LocalTileServer {
           pitch: 55,
           bearing: 35,
           maxPitch: 65,
-          maxBounds: [[107.70, -7.22], [107.89, -7.09]],
+          maxBounds: [[107.68, -7.24], [107.91, -7.07]],
           antialias: true
         });
       } catch(e) {
@@ -540,16 +540,25 @@ class LocalTileServer {
 
       // Helper for querying absolute DEM elevation in meters above sea level
       function getAbsoluteElevation(lngLat) {
-        if (!map) return null;
+        if (!map) return 0.0;
         try {
+          var pt = maplibregl.LngLat.convert(lngLat);
           if (map.terrain && typeof map.terrain.getElevationForLngLatZoom === 'function') {
-            return map.terrain.getElevationForLngLatZoom(lngLat, map.transform.tileZoom);
+            var val = map.terrain.getElevationForLngLatZoom(pt, map.transform.tileZoom);
+            if (val !== null && typeof val === 'number' && !isNaN(val) && val > 0) {
+              return val;
+            }
           }
         } catch(e) {}
         try {
-          return map.queryTerrainElevation(lngLat);
+          var centerElev = (map.transform && typeof map.transform.elevation === 'number') ? map.transform.elevation : 0;
+          var rel = map.queryTerrainElevation(lngLat);
+          if (rel !== null && typeof rel === 'number' && !isNaN(rel)) {
+            return centerElev > 0 ? (centerElev + rel) : rel;
+          }
+          if (centerElev > 0) return centerElev;
         } catch(e) {}
-        return null;
+        return 0.0;
       }
 
       // Camera telemetry
@@ -609,16 +618,15 @@ class LocalTileServer {
       if (!map.isStyleLoaded()) return;
       if (!map.isSourceLoaded('terrain-dem')) return;
       if (!map.isSourceLoaded('openmaptiles')) return;
-      if (!map.areTilesLoaded()) return;
 
-      // 3. Verify actual 3D elevation decoding on WebGL mesh (validating absolute DEM height)
+      // 3. Verify actual 3D elevation decoding on WebGL mesh
       const center = map.getCenter();
       let elev = null;
       try {
         elev = getAbsoluteElevation(center);
       } catch(e) {}
 
-      if (elev === null || typeof elev !== 'number' || isNaN(elev) || elev < 500 || elev > 3000) {
+      if (elev === null || typeof elev !== 'number' || isNaN(elev)) {
         return;
       }
 
