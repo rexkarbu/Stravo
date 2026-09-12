@@ -818,6 +818,19 @@ class LocalTileServer {
         } catch(e) {
           console.error('[stravoApi] clearRoute error:', e);
         }
+      },
+      setCameraPose: function(lng, lat, zoom, pitch, bearing) {
+        if (!map) return;
+        try {
+          map.jumpTo({
+            center: [lng, lat],
+            zoom: (zoom !== undefined && zoom !== null) ? zoom : map.getZoom(),
+            pitch: (pitch !== undefined && pitch !== null) ? pitch : map.getPitch(),
+            bearing: (bearing !== undefined && bearing !== null) ? bearing : map.getBearing()
+          });
+        } catch(e) {
+          console.error('[stravoApi] setCameraPose error:', e);
+        }
       }
     };
 

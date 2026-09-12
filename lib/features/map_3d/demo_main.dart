@@ -2,10 +2,13 @@
 
 import 'server/demo_pack_manager.dart';
 import 'server/local_tile_server.dart';
+import '../../app/theme/stravo_colors.dart';
 import '../../core/constants/enums.dart';
 import 'domain/calculators/polyline_color_calculator.dart';
 import 'domain/models/colored_route_segment.dart';
 import 'domain/models/route_coordinate.dart';
+import 'controllers/camera_3d_controller.dart';
+import 'widgets/flyover_player.dart';
 import 'widgets/terrain_map_webview.dart';
 
 /// Demo Spike entry point for 3D Terrain Proof-of-Concept.
@@ -57,6 +60,8 @@ class _DemoMainPageState extends State<DemoMainPage> {
   Map<String, dynamic>? _readyData;
   final GlobalKey<TerrainMapWebViewState> _webKey = GlobalKey<TerrainMapWebViewState>();
   String _activePolylineMode = 'Off';
+  late final Camera3DController _cameraController = Camera3DController(route: _kamojangRoute);
+  bool _showFlyover = false;
 
   // Realistic sample route around Kamojang Crater (20 GPS trackpoints)
   static final List<RouteCoordinate> _kamojangRoute = [
@@ -274,49 +279,81 @@ class _DemoMainPageState extends State<DemoMainPage> {
                 top: 12,
                 left: 12,
                 right: 12,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white24),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: ['Off', 'Speed Heat', 'Elevation', 'Surface'].map((mode) {
-                        final isSelected = _activePolylineMode == mode;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: InkWell(
-                            onTap: () => _applyPolylineMode(mode),
-                            borderRadius: BorderRadius.circular(16),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isSelected ? Colors.greenAccent.shade700 : Colors.transparent,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                mode,
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.white70,
-                                  fontSize: 11,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white24),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: ['Off', 'Speed Heat', 'Elevation', 'Surface'].map((mode) {
+                          final isSelected = _activePolylineMode == mode;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: InkWell(
+                              onTap: () => _applyPolylineMode(mode),
+                              borderRadius: BorderRadius.circular(16),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.greenAccent.shade700 : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  mode,
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    // Flyover Toggle Button
+                    InkWell(
+                      onTap: () => setState(() => _showFlyover = !_showFlyover),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _showFlyover ? StravoColors.orangePrimary : Colors.black87,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Icon(
+                          _showFlyover ? Icons.flight_takeoff : Icons.flight,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // Flyover Player Overlay
+              if (_showFlyover)
+                Positioned.fill(
+                  child: FlyoverPlayer(
+                    controller: _cameraController,
+                    onCameraUpdate: (camState) {
+                      _webKey.currentState?.setCameraPose(camState);
+                    },
+                  ),
+                ),
             ],
           ),
         ),

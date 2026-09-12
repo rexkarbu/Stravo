@@ -37,11 +37,11 @@ Tujuan: Menghadirkan fitur peninjauan rute sinematik pasca-olahraga ala Relive /
   - [x] Kamera otomatis mendekat (*zoom in*) dan memiring (*tilt down*) saat mendaki tanjakan curam
   - [x] Kamera otomatis menjauh (*zoom out*) di puncak ketinggian untuk memperlihatkan panorama luas
   - [x] Kamera memutar halus mengikuti arah tikungan jalan (*bearing rotation*)
-- [ ] **Floating Telemetry HUD Sinkron**
-  - [ ] Kotak overlay HUD transparan yang menampilkan kecepatan, elevasi, tanjakan %, dan jarak tempuh yang nilainya berubah sinkron dengan pergerakan kamera 3D
-- [ ] **Kontrol Interaktif Pemutar Flyover (`lib/features/map_3d/widgets/flyover_player.dart`)**
-  - [ ] Tombol Play, Pause, Scrubber Slider untuk memajukan/memundurkan posisi kamera
-  - [ ] Pengatur kecepatan pemutaran: 1x, 2x, 4x, 8x
+- [x] **Floating Telemetry HUD Sinkron**
+  - [x] Kotak overlay HUD transparan yang menampilkan kecepatan, elevasi, tanjakan %, dan jarak tempuh yang nilainya berubah sinkron dengan pergerakan kamera 3D
+- [x] **Kontrol Interaktif Pemutar Flyover (`lib/features/map_3d/widgets/flyover_player.dart`)**
+  - [x] Tombol Play, Pause, Scrubber Slider untuk memajukan/memundurkan posisi kamera
+  - [x] Pengatur kecepatan pemutaran: 1x, 2x, 4x, 8x
 
 ---
 

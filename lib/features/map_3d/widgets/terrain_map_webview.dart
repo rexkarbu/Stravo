@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../controllers/camera_3d_controller.dart';
 import '../domain/models/colored_route_segment.dart';
 
 /// States for the terrain map.
@@ -232,6 +233,13 @@ class TerrainMapWebViewState extends State<TerrainMapWebView>
   /// Clears any currently displayed route polyline from the map.
   Future<void> clearRoute() async {
     await _controller.runJavaScript('window.stravoApi && window.stravoApi.clearRoute()');
+  }
+
+  /// Updates the 3D camera pose instantaneously (jumpTo) for 60 FPS flyover replay.
+  Future<void> setCameraPose(Camera3DState state) async {
+    await _controller.runJavaScript(
+      'window.stravoApi && window.stravoApi.setCameraPose(${state.longitude}, ${state.latitude}, ${state.zoom}, ${state.pitch}, ${state.bearing})',
+    );
   }
 
   @override

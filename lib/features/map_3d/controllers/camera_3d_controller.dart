@@ -27,6 +27,15 @@ class Camera3DState {
   /// Route progress represented by this state (0.0 to 1.0).
   final double progress;
 
+  /// Current route speed in km/h.
+  final double speedKmH;
+
+  /// Current terrain climb gradient in percentage (e.g. +7.5% or -3.2%).
+  final double gradientPercent;
+
+  /// Current distance traveled along the route in meters.
+  final double distanceMeters;
+
   const Camera3DState({
     required this.latitude,
     required this.longitude,
@@ -35,6 +44,9 @@ class Camera3DState {
     required this.pitch,
     required this.zoom,
     required this.progress,
+    this.speedKmH = 0.0,
+    this.gradientPercent = 0.0,
+    this.distanceMeters = 0.0,
   });
 
   /// Serializes camera parameters for MapLibre GL JS / StravoBridge camera methods.
@@ -45,6 +57,9 @@ class Camera3DState {
         'pitch': pitch,
         'zoom': zoom,
         'progress': progress,
+        'speedKmH': speedKmH,
+        'gradientPercent': gradientPercent,
+        'distanceMeters': distanceMeters,
       };
 
   @override
@@ -278,6 +293,13 @@ class Camera3DController {
     }
     zoom = zoom.clamp(13.0, 17.5);
 
+    // Speed interpolation from control points
+    final s0 = p0.speedKmPerHour ?? p1.speedKmPerHour ?? 0.0;
+    final s1 = p1.speedKmPerHour ?? 0.0;
+    final s2 = p2.speedKmPerHour ?? p1.speedKmPerHour ?? 0.0;
+    final s3 = p3.speedKmPerHour ?? p2.speedKmPerHour ?? 0.0;
+    final currentSpeed = _catmullRom(s0, s1, s2, s3, t).clamp(0.0, 150.0);
+
     return Camera3DState(
       latitude: lat,
       longitude: lng,
@@ -286,6 +308,9 @@ class Camera3DController {
       pitch: pitch,
       zoom: zoom,
       progress: p,
+      speedKmH: currentSpeed,
+      gradientPercent: gradientPct,
+      distanceMeters: targetDist,
     );
   }
 
