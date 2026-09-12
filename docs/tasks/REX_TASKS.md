@@ -66,17 +66,17 @@ Tujuan: Menghasilkan video rekap MP4 siap share ke Instagram Stories dan WhatsAp
 ## 🏆 Fase 4: Live Segments, Ghost Competitor & Personal Heatmap
 Tujuan: Gamifikasi olahraga offline — bertanding melawan rekor sendiri di jalan dan visualisasi jalur bersepeda seumur hidup.
 
-- [ ] **Tabel Database & CRUD Segmen (`lib/core/database/tables/segments.dart`)**
-  - [ ] Tabel `segments`: ID, nama, titik start (lat/lng), titik finish, jarak, elevasi, bounding box spasial
-  - [ ] Tabel `segment_efforts`: Riwayat waktu setiap kali pengguna melintasi segmen tersebut
-- [ ] **Spatial Bounding Box Matcher (`lib/features/segments/segment_matcher.dart`)**
-  - [ ] Deteksi otomatis saat koordinat GPS pengguna memasuki radius titik awal segmen secara offline
-  - [ ] Algoritma ringan yang tidak membebani baterai HP saat tracking
-- [ ] **Ghost Competitor Engine (`lib/features/segments/ghost_pacer_engine.dart`)**
-  - [ ] Mengambil data rekor waktu terbaik (PR) pengguna di segmen tersebut
-  - [ ] Menghitung selisih detik secara real-time saat pengguna melintasi segmen
-  - [ ] Memunculkan HUD: *"Kamu 3 detik di depan Ghost Pacer!"*
-  - [ ] Integrasi audio TTS suara: *"Mulai segmen Tanjakan Bukit! Rekor terbaikmu 4 menit 20 detik!"*
+- [x] **Tabel Database & CRUD Segmen (`lib/core/database/tables/segments.dart`)**
+  - [x] Tabel `segments`: ID, nama, titik start (lat/lng), titik finish, jarak, elevasi, bounding box spasial
+  - [x] Tabel `segment_efforts`: Riwayat waktu setiap kali pengguna melintasi segmen tersebut
+- [x] **Spatial Bounding Box Matcher (`lib/features/segments/segment_matcher.dart`)**
+  - [x] Deteksi otomatis saat koordinat GPS pengguna memasuki radius titik awal segmen secara offline
+  - [x] Algoritma ringan yang tidak membebani baterai HP saat tracking
+- [x] **Ghost Competitor Engine (`lib/features/segments/ghost_pacer_engine.dart`)**
+  - [x] Mengambil data rekor waktu terbaik (PR) pengguna di segmen tersebut
+  - [x] Menghitung selisih detik secara real-time saat pengguna melintasi segmen
+  - [x] Memunculkan HUD: *"Kamu 3 detik di depan Ghost Pacer!"*
+  - [x] Integrasi audio TTS suara: *"Mulai segmen Tanjakan Bukit! Rekor terbaikmu 4 menit 20 detik!"*
 - [ ] **Personal Heatmap 2D & 3D Offline (`lib/features/heatmap/`)**
   - [ ] Mengambil seluruh koordinat aktivitas masa lalu dari database SQLite lokal
   - [ ] Merender garis-garis rute menjadi layer heatmap berpendar neon di atas peta offline
