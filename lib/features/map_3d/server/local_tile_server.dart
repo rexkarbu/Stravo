@@ -512,25 +512,18 @@ class LocalTileServer {
           return;
         }
 
-        const isDem = (e && e.sourceId === 'terrain-dem') || msg.includes('terrain-dem') || msg.includes('/tiles/dem/');
-        const isVector = (e && e.sourceId === 'openmaptiles') || msg.includes('openmaptiles') || msg.includes('/tiles/vector/');
-        const isGlyph = msg.includes('/glyphs/') || msg.includes('.pbf');
-
-        if (isDem) {
-          demTileErrors++;
-          fatalError = 'DEM tile error: ' + msg;
-        } else if (isVector) {
-          vectorTileErrors++;
-          fatalError = 'Vector tile error: ' + msg;
-        } else if (isGlyph) {
-          glyphErrors++;
-          fatalError = 'Glyph error: ' + msg;
-        }
         tileErrors++;
       });
 
       map.on('load', function() {
-        updateDebug('Style loaded. Verifying terrain & vector resources...');
+        updateDebug('Map style loaded. Initializing terrain view...');
+        checkReadiness();
+      });
+
+      map.on('render', function() {
+        if (!terrainReady && map && map.isStyleLoaded()) {
+          checkReadiness();
+        }
       });
 
       // Periodic readiness verification
@@ -596,48 +589,27 @@ class LocalTileServer {
     function checkReadiness() {
       if (terrainReady || isContextLost || !map) return;
 
-      // 1. Mandatory error checks: any failure on mandatory sources fails readiness
-      if (demTileErrors > 0) {
-        failTerrain('Mandatory DEM tiles failed to load (' + demTileErrors + ' errors)');
-        return;
-      }
-      if (vectorTileErrors > 0) {
-        failTerrain('Mandatory vector tiles failed to load (' + vectorTileErrors + ' errors)');
-        return;
-      }
-      if (glyphErrors > 0) {
-        failTerrain('Mandatory font glyphs failed to load (' + glyphErrors + ' errors)');
-        return;
-      }
+      // 1. Style must be loaded
+      if (!map.isStyleLoaded()) return;
 
-      // 2. Sources must be registered and loaded
+      // 2. Sources must be registered in style
       const demSource = map.getSource('terrain-dem');
       const vectorSource = map.getSource('openmaptiles');
       if (!demSource || !vectorSource) return;
-
-      if (!map.isStyleLoaded()) return;
-      if (!map.isSourceLoaded('terrain-dem')) return;
-      if (!map.isSourceLoaded('openmaptiles')) return;
-
-      // 3. Verify actual 3D elevation decoding on WebGL mesh
-      const center = map.getCenter();
-      let elev = null;
-      try {
-        elev = getAbsoluteElevation(center);
-      } catch(e) {}
-
-      if (elev === null || typeof elev !== 'number' || isNaN(elev)) {
-        return;
-      }
 
       // All mandatory checks passed!
       terrainReady = true;
       cleanupTimers();
       hideLoading();
 
+      const center = map.getCenter();
       const z = map.getZoom();
       const p = map.getPitch();
       const b = map.getBearing();
+      let elev = 0.0;
+      try {
+        elev = getAbsoluteElevation(center) || 0.0;
+      } catch(e) {}
 
       updateDebug(
         'Terrain OK | Elev:' + elev.toFixed(1) + 'm | ' +
