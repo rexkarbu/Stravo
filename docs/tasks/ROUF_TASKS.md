@@ -9,24 +9,24 @@
 ## 💾 Fase 1: Drift SQLite Persistence & Skema Database Lokal
 Tujuan: Membangun fondasi database SQLite lokal yang sangat cepat, aman dari crash, dan siap menampung ribuan titik GPS.
 
-- [ ] **Setup Dependensi Database di `pubspec.yaml`**
-  - [ ] Pasang `drift`, `sqlite3_flutter_libs`, `path_provider`, `path`
-  - [ ] Pasang `drift_dev`, `build_runner` di `dev_dependencies`
-- [ ] **Implementasi Definisi Tabel Drift (`lib/core/database/tables/`)**
-  - [ ] Tabel `activities`: ID UUID, sport_type, jarak, waktu bergerak, elevasi, kecepatan, komposisi gravel/aspal
-  - [ ] Tabel `track_points`: Titik GPS 1Hz, lat, lng, elevasi, akurasi, kecepatan, tanjakan %, tag permukaan jalan
-  - [ ] Tabel `waypoint_photos`: Foto geotagged, file_path lokal, lat, lng, km tempuh
-  - [ ] Tabel `gears`: Sepeda & sepatu, odometer jarak total, status aktif/pensiun
-  - [ ] Tabel `user_profile`: Data fisik atlet lokal (berat badan, Max HR, FTP)
-- [ ] **Data Access Objects (DAOs) (`lib/core/database/daos/`)**
-  - [ ] `ActivitiesDao`: CRUD aktivitas, filter multi-sport, query total statistik seumur hidup
-  - [ ] `TrackPointsDao`: Insert batch titik koordinat, query titik berurutan berdasarkan `sequence_idx`
-  - [ ] `PhotosDao`: Simpan metadata foto geotagged
-- [ ] **Incremental Local Flush Mechanism (Jaminan 0% Data Loss)**
-  - [ ] Auto-commit setiap 5 detik: Menulis buffer koordinat GPS ke SQLite agar jika HP mati mendadak atau kehabisan baterai, data tidak hilang
-- [ ] **Crash Recovery Detector**
-  - [ ] Saat aplikasi dibuka, periksa apakah ada record di `activities` dengan status `inProgress`
-  - [ ] Jika ada, munculkan prompt: *"Lanjutkan sesi yang terputus atau simpan sekarang?"*
+- [x] **Setup Dependensi Database di `pubspec.yaml`**
+  - [x] Pasang `drift`, `sqlite3_flutter_libs`, `path_provider`, `path`
+  - [x] Pasang `drift_dev`, `build_runner` di `dev_dependencies`
+- [x] **Implementasi Definisi Tabel Drift (`lib/core/database/tables/`)**
+  - [x] Tabel `activities`: ID UUID, sport_type, jarak, waktu bergerak, elevasi, kecepatan, komposisi gravel/aspal
+  - [x] Tabel `track_points`: Titik GPS 1Hz, lat, lng, elevasi, akurasi, kecepatan, tanjakan %, tag permukaan jalan
+  - [x] Tabel `waypoint_photos`: Foto geotagged, file_path lokal, lat, lng, km tempuh
+  - [x] Tabel `gears`: Sepeda & sepatu, odometer jarak total, status aktif/pensiun
+  - [x] Tabel `user_profile`: Data fisik atlet lokal (berat badan, Max HR, FTP)
+- [x] **Data Access Objects (DAOs) (`lib/core/database/daos/`)**
+  - [x] `ActivitiesDao`: CRUD aktivitas, filter multi-sport, query total statistik seumur hidup
+  - [x] `TrackPointsDao`: Insert batch titik koordinat, query titik berurutan berdasarkan `sequence_idx`
+  - [x] `PhotosDao`: Simpan metadata foto geotagged
+- [x] **Incremental Local Flush Mechanism (Jaminan 0% Data Loss)**
+  - [x] Auto-commit setiap 5 detik: Menulis buffer koordinat GPS ke SQLite agar jika HP mati mendadak atau kehabisan baterai, data tidak hilang
+- [x] **Crash Recovery Detector**
+  - [x] Saat aplikasi dibuka, periksa apakah ada record di `activities` dengan status `inProgress`
+  - [x] Jika ada, munculkan prompt: *"Lanjutkan sesi yang terputus atau simpan sekarang?"*
 
 ---
 
