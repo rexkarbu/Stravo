@@ -2,9 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:stravo/app/theme/stravo_colors.dart';
 import 'package:stravo/app/theme/stravo_typography.dart';
 import 'package:stravo/core/widgets/neon_speedometer_gauge.dart';
+import 'package:stravo/features/recording/presentation/screens/activity_save_summary_screen.dart';
 
-class RecordingScreen extends StatelessWidget {
+class RecordingScreen extends StatefulWidget {
   const RecordingScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RecordingScreen> createState() => _RecordingScreenState();
+}
+
+class _RecordingScreenState extends State<RecordingScreen> {
+  bool _isPaused = false;
+
+  void _togglePause() {
+    setState(() {
+      _isPaused = !_isPaused;
+    });
+  }
+
+  void _finishRide() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const ActivitySaveSummaryScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,24 +64,35 @@ class RecordingScreen extends StatelessWidget {
         children: [
           Row(
             children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.arrow_back, color: StravoColors.textSecondary, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(width: 10),
               Container(
-                width: 12,
-                height: 12,
-                decoration: const BoxDecoration(
-                  color: StravoColors.cyberGreen,
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: _isPaused ? StravoColors.neonYellow : StravoColors.cyberGreen,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: StravoColors.cyberGreen,
+                      color: _isPaused ? StravoColors.neonYellow : StravoColors.cyberGreen,
                       blurRadius: 8,
                     )
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'LIVE GPS',
-                style: StravoTypography.metricLabel,
+              Text(
+                _isPaused ? 'TERJEDA' : 'GPS LOCKED',
+                style: StravoTypography.caption.copyWith(
+                  color: _isPaused ? StravoColors.neonYellow : StravoColors.cyberGreen,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
               ),
             ],
           ),
@@ -92,34 +125,73 @@ class RecordingScreen extends StatelessWidget {
           end: Alignment.topCenter,
           colors: [
             StravoColors.background,
-            StravoColors.background.withOpacity(0.0),
+            StravoColors.background.withValues(alpha: 0.0),
           ],
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildPillButton(
-            label: 'LAP',
-            color: StravoColors.surfaceElevated,
-            textColor: Colors.white,
-            icon: Icons.flag,
-          ),
-          _buildPillButton(
-            label: 'PAUSE RIDE',
-            color: StravoColors.neonPink,
-            textColor: Colors.black,
-            icon: Icons.pause,
-            isPrimary: true,
-          ),
-          _buildPillButton(
-            label: 'MAP',
-            color: StravoColors.surfaceElevated,
-            textColor: Colors.white,
-            icon: Icons.map,
-          ),
-        ],
-      ),
+      child: _isPaused ? _buildPausedControls() : _buildActiveControls(),
+    );
+  }
+
+  Widget _buildActiveControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildPillButton(
+          label: 'LAP',
+          color: StravoColors.surfaceElevated,
+          textColor: Colors.white,
+          icon: Icons.flag,
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Lap dicatat!'), duration: Duration(seconds: 1)),
+            );
+          },
+        ),
+        _buildPillButton(
+          label: 'PAUSE RIDE',
+          color: StravoColors.neonPink,
+          textColor: Colors.black,
+          icon: Icons.pause,
+          isPrimary: true,
+          onTap: _togglePause,
+        ),
+        _buildPillButton(
+          label: 'KAMERA',
+          color: StravoColors.surfaceElevated,
+          textColor: Colors.white,
+          icon: Icons.camera_alt_outlined,
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Geotag Photo Captured!'), duration: Duration(seconds: 1)),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPausedControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildPillButton(
+          label: 'RESUME',
+          color: StravoColors.cyberGreen,
+          textColor: Colors.black,
+          icon: Icons.play_arrow,
+          isPrimary: true,
+          onTap: _togglePause,
+        ),
+        _buildPillButton(
+          label: 'FINISH & SIMPAN',
+          color: StravoColors.orangePrimary,
+          textColor: Colors.white,
+          icon: Icons.stop,
+          isPrimary: true,
+          onTap: _finishRide,
+        ),
+      ],
     );
   }
 
@@ -129,40 +201,45 @@ class RecordingScreen extends StatelessWidget {
     required Color textColor,
     IconData? icon,
     bool isPrimary = false,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isPrimary ? 32 : 24,
-        vertical: isPrimary ? 18 : 16,
-      ),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: isPrimary
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                )
-              ]
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: textColor, size: 20),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            label,
-            style: StravoTypography.bodyBold.copyWith(
-              color: textColor,
-              letterSpacing: 0.5,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isPrimary ? 28 : 20,
+          vertical: isPrimary ? 16 : 14,
+        ),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: isPrimary
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.4),
+                    blurRadius: 18,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: textColor, size: 20),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: StravoTypography.bodyBold.copyWith(
+                color: textColor,
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

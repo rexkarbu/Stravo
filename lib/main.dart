@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:stravo/app/presentation/main_navigation_shell.dart';
 import 'package:stravo/app/theme/app_theme.dart';
-import 'package:stravo/features/recording/presentation/screens/recording_screen.dart';
 
 void main() {
   runApp(const StravoApp());
@@ -16,7 +16,7 @@ class StravoApp extends StatelessWidget {
       title: 'Stravo Pro',
       debugShowCheckedModeBanner: false,
       theme: StravoAppTheme.darkTheme,
-      home: const RecordingScreen(),
+      home: const MainNavigationShell(),
     );
   }
 }
